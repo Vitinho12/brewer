@@ -48,6 +48,7 @@ export function startGate(app){
   var label=app?String(app).charAt(0).toUpperCase()+String(app).slice(1):'Instagram';
   if(label==='1'||label==='True')label='Instagram';
   S.wait={phase:'gate',app:label,feel:'',total:secs,start:now,end:now+secs*1000,attempt:(L().gateCount||0)+1,notified:false};
+  clearGateURL();
   holdScreen();save();
 }
 export function selectFeel(feel){
@@ -103,7 +104,7 @@ export function gateBtnText(s,rem){
   var app=s.app||'Instagram';
   if(rem>0){
     var sec=Math.ceil(rem/1000);
-    return 'Aguarde '+sec+'s'+(s.feel?'...':' e escolha o motivo acima...');
+    return 'Aguarde '+sec+'s...';
   }
   if(!s.feel)return 'Toque em um motivo acima para liberar';
   return 'Liberar '+app+' por 5 min';
@@ -115,13 +116,28 @@ export function renderVontade(){
   if(s.phase==='gate'){
     var now=Date.now(),rem=Math.max(0,s.end-now),elapsed=Math.max(0,now-(s.start||(s.end-s.total*1000)));
     var pct=Math.max(0,Math.min(100,(1-rem/(s.total*1000))*100));
-    var ready=rem<=0&&!!s.feel;
     var f=S.focus,focusWarn='';
     if(f&&f.mode==='focus'){
       focusWarn=f.kind==='parcial'
-        ?'<div class="nudge"><h3>Foco parcial em andamento</h3><p class="small" style="margin-top:4px">Você está em <b>'+esc(f.label)+'</b>. Quer mesmo interromper agora?</p></div>'
-        :'<div class="nudge gate-warn"><h3>Atenção: xícara em risco!</h3><p class="small" style="margin-top:4px">Você está no foco <b>'+esc(f.label)+'</b>. Ir para o '+esc(s.app||'Instagram')+' agora vai quebrar sua xícara.</p></div>';
+        ?'<div class="nudge" style="width:100%"><h3>Foco parcial em andamento</h3><p class="small" style="margin-top:4px">Você está em <b>'+esc(f.label)+'</b>. Quer mesmo interromper agora?</p></div>'
+        :'<div class="nudge gate-warn" style="width:100%"><h3>Atenção: xícara em risco!</h3><p class="small" style="margin-top:4px">Você está no foco <b>'+esc(f.label)+'</b>. Ir para o '+esc(s.app||'Instagram')+' agora vai quebrar sua xícara.</p></div>';
     }
+    /* FASE 1: Enquanto o tempo corre, tela 100% clean (só respiração e contador) */
+    if(rem>0){
+      el.innerHTML=
+        '<div class="gate-clean">'+
+          '<div class="gate-badge">'+s.attempt+'ª abertura de hoje · pausa de '+s.total+'s</div>'+
+          '<h1>Respire fundo.</h1>'+
+          '<p class="lead" style="max-width:340px">Uma pausa rápida antes de decidir se você realmente quer entrar.</p>'+
+          focusWarn+
+          '<div class="wait-time" id="waitTime" style="margin-top:24px">'+mmss(rem)+'</div>'+
+          '<div class="bar-track"><div class="bar-fill" id="gateBar" style="width:'+pct+'%"></div></div>'+
+          '<div class="breath" style="margin-top:28px"><div class="orb-box"><div class="orb" style="animation-delay:-'+(elapsed%10000)+'ms"></div></div><div><b id="breathLabel">'+(elapsed%10000<4000?'Inspira':'Solta')+'</b><p class="muted small">4 segundos para puxar, 6 para soltar</p></div></div>'+
+        '</div>';
+      return;
+    }
+    /* FASE 2: Tempo zerou (00:00) -> revela os motivos e os botões de decisão */
+    var ready=!!s.feel;
     var chips=Object.keys(FEELS).map(function(k){
       return '<button class="feel" data-act="feel" data-v="'+esc(k)+'" aria-pressed="'+(s.feel===k)+'">'+esc(k)+'</button>';
     }).join('');
@@ -130,22 +146,21 @@ export function renderVontade(){
     var tipBox=s.feel?'<div class="suggest"><p>'+esc(FEELS[s.feel]||'')+'</p>'+(LEISURE_FEELS[s.feel]?'<p class="small muted" style="margin-top:6px">Como é uso consciente/lazer, não será contado como recaída na sua revisão.</p>':'')+extra+'</div>':'';
     var nextStep=GATE_STEPS[Math.min(GATE_STEPS.length-1,s.attempt)];
     el.innerHTML=
-      '<div class="gate-badge">'+s.attempt+'ª abertura de hoje · pausa de '+s.total+'s</div>'+
-      '<h1>Respire antes de entrar.</h1>'+
-      '<p class="lead">Uma pausa rápida para quebrar o piloto automático. '+(s.attempt<GATE_STEPS.length?'Na próxima vez hoje, a pausa sobe para '+nextStep+'s.':'Pausa máxima de 30s ativa hoje.')+'</p>'+
-      focusWarn+
-      '<div class="wait-time" id="waitTime">'+mmss(rem)+'</div>'+
-      '<div class="bar-track"><div class="bar-fill" id="gateBar" style="width:'+pct+'%"></div></div>'+
-      '<div class="breath"><div class="orb-box"><div class="orb" style="animation-delay:-'+(elapsed%10000)+'ms"></div></div><div><b id="breathLabel">'+(elapsed%10000<4000?'Inspira':'Solta')+'</b><p class="muted small">4 segundos para puxar, 6 para soltar</p></div></div>'+
-      '<p class="label">1. O que está por trás dessa abertura?</p>'+
-      '<div class="feels">'+chips+'</div>'+
-      tipBox+
-      '<div class="stack" style="margin-top:26px">'+
-        '<button class="btn block" data-act="gate-stay">'+(f&&f.mode==='focus'?'Voltar para o foco (não abrir)':'Deixar pra lá e ficar no Brewer')+'</button>'+
-        '<button class="btn quiet block" id="gateOpenBtn" data-act="gate-open-app"'+(ready?'':' disabled')+'>'+esc(gateBtnText(s,rem))+'</button>'+
-        '<button class="ghost small" data-act="start-10m" style="text-align:center;margin-top:4px">Quero esperar 10 min na curva da vontade</button>'+
-      '</div>'+
-      '<p class="small muted" style="margin-top:24px;text-align:center">Atalho do iPhone: <b>'+esc(S.gateShortcut||'Liberar Instagram')+'</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>';
+      '<div class="gate-reveal">'+
+        '<div class="gate-badge">'+s.attempt+'ª abertura · pausa concluída</div>'+
+        '<h1>Ainda quer entrar?</h1>'+
+        '<p class="lead">'+(s.attempt<GATE_STEPS.length?'Se liberar agora, a próxima pausa hoje será de '+nextStep+'s.':'Pausa máxima de 30s ativa hoje.')+'</p>'+
+        focusWarn+
+        '<p class="label">O que está por trás dessa abertura?</p>'+
+        '<div class="feels">'+chips+'</div>'+
+        tipBox+
+        '<div class="stack" style="margin-top:26px">'+
+          '<button class="btn block" data-act="gate-stay">'+(f&&f.mode==='focus'?'Voltar para o foco (não abrir)':'Deixar pra lá e ficar no Brewer')+'</button>'+
+          '<button class="btn quiet block" id="gateOpenBtn" data-act="gate-open-app"'+(ready?'':' disabled')+'>'+esc(gateBtnText(s,0))+'</button>'+
+          '<button class="ghost small" data-act="start-10m" style="text-align:center;margin-top:4px">Quero esperar 10 min na curva da vontade</button>'+
+        '</div>'+
+        '<p class="small muted" style="margin-top:24px;text-align:center">Atalho do iPhone: <b>'+esc(S.gateShortcut||'Liberar Instagram')+'</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>'+
+      '</div>';
     return;
   }
   if(s.phase==='wait'){

@@ -106,7 +106,11 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:42px;backgrou
 .feel[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink)}
 .gate-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;background:var(--sea-soft);color:var(--sea);font-size:13px;font-weight:700;margin-bottom:12px}
 .gate-warn{border-color:var(--danger);background:var(--surface)}
-body.gate-lock .bar{pointer-events:none;opacity:.35;transition:opacity .25s ease}
+.gate-clean{min-height:68vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.gate-clean .bar-track{width:100%;max-width:280px}
+.gate-clean .breath{justify-content:center;text-align:left}
+.gate-reveal{animation:cupin .4s ease both}
+body.gate-lock .bar{pointer-events:none;opacity:.25;transition:opacity .25s ease}
 .curve{width:100%;height:auto;display:block;margin-top:22px;overflow:visible}
 .curve text{fill:var(--muted);font-size:11px;text-anchor:middle;font-family:Figtree,sans-serif}
 .wait-time{font-family:"Bricolage Grotesque",Figtree,sans-serif;font-weight:700;font-size:56px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1;margin-top:14px}

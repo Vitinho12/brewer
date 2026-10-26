@@ -81,8 +81,9 @@ export function gateOpenApp(){
     logUrge(s.feel,'leisure');
   }
   var shName=S.gateShortcut||'Liberar Instagram';
+  var appTarget=s.app||'Instagram';
   S.wait=null;S.tab='hoje';releaseLock();clearGateURL();save();render();
-  try{window.location.href='shortcuts://run-shortcut?name='+encodeURIComponent(shName)}catch(e){}
+  try{window.location.href='shortcuts://run-shortcut?name='+encodeURIComponent(shName)+'&input=text&text='+encodeURIComponent(appTarget)}catch(e){}
 }
 export function gateConfig(){
   var cur=S.gateShortcut||'Liberar Instagram';

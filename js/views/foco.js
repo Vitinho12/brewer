@@ -1,5 +1,5 @@
 import { $, esc, pl, mmss, uid, today, fmtHM, fmtDur, seg } from '../utils.js';
-import { S, UI, L, save, cmp, findTask, archiveFocus, pickModel, addCup, cupShow, focusHero, holdScreen, releaseLock, alertUser, toast, openSheet, closeSheet } from '../state.js';
+import { S, UI, L, save, cmp, findTask, archiveFocus, CUP_ASSETS, cupMeta, cupImg, pickModel, addCup, cupShow, focusHero, holdScreen, releaseLock, setAmbience, alertUser, toast, openSheet, closeSheet } from '../state.js';
 import { render, go } from '../app.js';
 
 /* ---------- foco: motor baseado em timestamps ---------- */
@@ -19,7 +19,7 @@ export function breakFocus(reason,away){
   f.msg=reason==='phone'?'Você usou o celular durante o bloco ('+fmtAway(away)+' fora). A interrupção foi registrada.':reason==='pause'?'A pausa de emergência passou de 10 minutos.':'Você desistiu do bloco.';
   if(reason==='phone')S.interruptions.push({t:Date.now(),type:'phone',mins:Math.max(1,Math.round(away/60000)),cat:f.cat||'',label:f.label});
   releaseLock();save();render();
-  if(S.tab!=='foco')toast('O foco foi interrompido e a xícara quebrou.');
+  if(S.tab!=='foco'&&S.tab!=='hoje')toast('O foco foi interrompido e a xícara quebrou.');
 }
 export function completeFocus(){
   var f=S.focus;if(!f||f.mode!=='focus')return;
@@ -72,7 +72,60 @@ export function interruptLine(){
   return '<p class="sumline">Interrupções de foco na semana: '+a.length+' ('+ph+' por uso do celular, '+(a.length-ph)+' pausas de emergência).</p>';
 }
 
-/* ---------- FOCO ---------- */
+/* ---------- FOCO & RITUAL V60 ANIMADO ---------- */
+export function v60PourSVG(cupColor){
+  var c=cupColor||'#C8654B';
+  return '<svg class="v60-wrap" viewBox="0 0 200 220" aria-hidden="true">'+
+    /* vapor suave */
+    '<path class="v60-steam1" d="M86 34c-4-7 4-13 0-20" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" opacity=".5"/>'+
+    '<path class="v60-steam2" d="M114 36c-4-7 4-13 0-20" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" opacity=".5"/>'+
+    /* bico de ganso e fio de água quente */
+    '<path d="M168 12c-22 0-34 8-48 16l-16 6" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>'+
+    '<line class="v60-stream" x1="102" y1="34" x2="100" y2="82" stroke="var(--sun)" stroke-width="3.5" stroke-linecap="round"/>'+
+    /* coador V60 cerâmica */
+    '<path d="M56 54h88l-28 54H84z" fill="var(--surface)" stroke="var(--sea)" stroke-width="3.5" stroke-linejoin="round"/>'+
+    '<path d="M144 64h11a9 9 0 0 1 0 18h-16" fill="none" stroke="var(--sea)" stroke-width="3.5" stroke-linecap="round"/>'+
+    /* cama de café em infusão dentro do filtro */
+    '<path d="M68 76q32-6 64 0l-16 30H84z" fill="#5A3821" opacity=".88"/>'+
+    '<rect x="70" y="108" width="60" height="5" rx="2.5" fill="var(--sea)"/>'+
+    /* gotas de café caindo */
+    '<circle class="v60-drop1" cx="100" cy="118" r="3.2" fill="#4A2C18"/>'+
+    '<circle class="v60-drop2" cx="100" cy="118" r="2.8" fill="#4A2C18"/>'+
+    /* xícara embaixo recebendo o café */
+    '<ellipse cx="100" cy="198" rx="46" ry="7" fill="rgba(0,0,0,.14)"/>'+
+    '<path d="M132 154h10a11 11 0 0 1 0 22h-12" fill="none" stroke="'+c+'" stroke-width="5.5" stroke-linecap="round"/>'+
+    '<path d="M64 144h72v18a36 28 0 0 1-36 32h0a36 28 0 0 1-36-32z" fill="'+c+'"/>'+
+    '<ellipse cx="100" cy="144" rx="36" ry="7" fill="#3A2416"/>'+
+    '<ellipse class="v60-liquid" cx="100" cy="144" rx="31" ry="5" fill="#7B4F2E"/>'+
+  '</svg>';
+}
+
+export function previewStageHTML(){
+  var cm=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:null;
+  if(cm!==null){
+    return '<div class="forest-stage">'+cupImg({ok:true,model:cm,id:''},'hero-img',false)+'</div>';
+  }
+  return '<div class="forest-stage"><img class="hero-img" src="assets/focus/v60.webp" alt="" aria-hidden="true"></div>';
+}
+export function cupPickerHTML(){
+  var cur=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:null;
+  var total=CUP_ASSETS.good.length,un=S.unlocked.length;
+  var items='<button class="cp-item" data-act="cup-pick" data-v="" aria-pressed="'+(cur===null)+'"><span class="cp-dot" style="background:var(--sun)"></span>'+(un<total?'Descobrir nova ('+un+'/'+total+')':'Automático')+'</button>';
+  S.unlocked.forEach(function(m){
+    var meta=cupMeta(m);
+    items+='<button class="cp-item" data-act="cup-pick" data-v="'+m+'" aria-pressed="'+(cur===m)+'"><span class="cp-dot" style="background:'+meta.color+'"></span>'+esc(meta.name)+'</button>';
+  });
+  return '<p class="label" style="margin-top:14px">Qual xícara preparar?</p><div class="cup-picker" role="group" aria-label="Escolher xícara">'+items+'</div>';
+}
+export function ambienceHTML(){
+  var cur=UI.amb||'off';
+  return '<div class="amb-bar" role="group" aria-label="Som ambiente de foco">'+
+    '<button class="amb-btn" data-act="amb-set" data-v="off" aria-pressed="'+(cur==='off')+'">Som: Desligado</button>'+
+    '<button class="amb-btn" data-act="amb-set" data-v="rain" aria-pressed="'+(cur==='rain')+'">Chuva suave</button>'+
+    '<button class="amb-btn" data-act="amb-set" data-v="cafe" aria-pressed="'+(cur==='cafe')+'">Cafeteria</button>'+
+  '</div>';
+}
+
 export function effCat(){
   if(S.draft.cat)return S.draft.cat;
   var id=effTaskId(),t=id?findTask(id):null;return t&&t.cat?t.cat:'';
@@ -121,8 +174,8 @@ export function pickTip(cfg){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 export function openRitual(cfg){
-  if(S.focus&&S.focus.mode==='focus'){toast('Já existe um foco em andamento.');go('foco');return}   /* nunca atropela um foco ativo */
-  archiveFocus();                                                                                   /* resultado antigo (quebrado, concluído, pausa) não bloqueia o ritual novo */
+  if(S.focus&&S.focus.mode==='focus'){toast('Já existe um foco em andamento.');go('foco');return}
+  archiveFocus();
   cfg.kind=cfg.kind==='parcial'?'parcial':'total';UI.pre={step:'ritual',cfg:cfg,tip:pickTip(cfg)};go('foco');
 }
 export function beginFocus(){
@@ -149,60 +202,79 @@ export function setKindUI(){document.querySelectorAll('[data-act="kind-set"]').f
 export function partialDone(f,task){
   return '<p class="lead">Você ficou '+fmtDur(Math.max(1,f.mins||Math.round(f.total/60)))+' em '+esc(f.label)+(f.early?' (encerrado antes do previsto)':'')+'. Sem punição: tudo conta.</p><div class="stack">'+(task&&!task.done?'<button class="btn quiet block" data-act="done-task">Marcar &ldquo;'+esc(task.text)+'&rdquo; como feita</button>':'')+'<button class="btn block" data-act="skip-break">Novo foco</button></div>';
 }
-export function renderPre(el){
+export function renderPreHTML(){
   var p=UI.pre,c=p.cfg;
+  var cm=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:0;
+  var cupCol=cupMeta(cm).color;
   if(p.step==='v60'){
-    el.innerHTML='<div class="prep">'+focusHero()+'<h1 style="text-align:center">Preparando o café...</h1><div class="pour" aria-hidden="true"></div><div class="bar-track"><div class="bar-fill"></div></div><div class="stack"><button class="btn quiet block" data-act="pre-skip">Pular e começar</button></div></div>';
-    return;
+    return '<div class="prep" style="text-align:center">'+v60PourSVG(cupCol)+'<h1>Passando o café...</h1><p class="muted small" style="margin-top:6px">Infusão lenta no V60. Respire fundo.</p><div class="bar-track"><div class="bar-fill"></div></div><div class="stack"><button class="btn quiet block" data-act="pre-skip">Pular e começar</button></div></div>';
   }
-  el.innerHTML=focusHero()+'<h1>Vamos preparar o café.</h1>'+
+  return v60PourSVG(cupCol)+'<h1>Vamos preparar o café.</h1>'+
     '<div class="ritual"><p class="muted small">Tarefa</p><p><b>'+esc(c.label)+'</b></p><p class="muted small" style="margin-top:10px">Tempo</p><p><b>'+(c.mins<1?'10 s (teste)':fmtDur(c.mins))+'</b>, '+(c.kind==='parcial'?'foco parcial':'foco total')+'</p></div>'+
     '<p class="tip-line">'+esc(p.tip)+'</p>'+
     (c.gcal?'<p class="small muted" style="margin-top:12px">Compromisso do Google Agenda: começa como foco parcial. Você pode trocar.</p>':'')+
     seg('pre-kind',c.kind,[['total','Foco total'],['parcial','Foco parcial']])+
     '<p class="small muted" style="margin-top:8px">'+KIND_NOTE[c.kind]+'</p>'+
-    '<div class="stack"><button class="btn block" data-act="pre-go">Preparar café</button><button class="btn quiet block" data-act="pre-skip">Pular e começar</button><button class="btn quiet block" data-act="pre-back">Voltar</button></div>';
+    '<div class="stack"><button class="btn block" data-act="pre-go">Coar café e começar</button><button class="btn quiet block" data-act="pre-skip">Pular ritual</button><button class="btn quiet block" data-act="pre-back">Voltar</button></div>';
 }
-export function renderFoco(){
-  var f=S.focus,el=$('#tab-foco');
-  if(f&&UI.pre&&f.mode!=='focus'){archiveFocus();f=S.focus}
-  if(!f){
-    if(UI.pre){renderPre(el);return}
-    var k=today(),undone=S.tasks.filter(function(t){return !t.done}).sort(function(a,b){return ((b.plan===k)-(a.plan===k))||cmp(a,b)});
-    var cur=effTaskId();
-    var opts=undone.map(function(t){return '<option value="'+t.id+'"'+(t.id===cur?' selected':'')+'>'+esc(t.text)+'</option>'}).join('')+'<option value="__other"'+(cur===''?' selected':'')+'>Outra coisa</option>';
-    el.innerHTML=focusHero()+'<h1>Um bloco, uma coisa.</h1><p class="lead">Escolha o que vai fazer e deixe o resto de lado até o tempo acabar. Pode bloquear a tela: ao voltar, o Brewer pergunta o que aconteceu.</p>'+
-      '<p class="label">No que você vai focar?</p>'+
-      '<select class="field" id="taskSel" aria-label="Tarefa" style="margin-top:8px">'+opts+'</select>'+
-      (cur===''?'<input class="field" id="customLabel" type="text" maxlength="60" placeholder="Descreva em poucas palavras" style="margin-top:10px">':'')+
-      '<p class="label">Para onde vai esse tempo?</p><div class="chips">'+catChips()+'</div>'+
-      durHTML()+kindHTML()+
-      '<label class="check-row"><input type="checkbox" id="fAwake"'+(S.keepAwake?' checked':'')+'> Manter a tela ligada durante o foco</label>'+'<div class="stack"><button class="btn block" data-act="start-focus">Começar foco</button></div>'+
-      '<p class="small muted" style="margin-top:28px">Depois do bloco vem uma pausa marcada de 5 minutos. Nela, o celular está liberado, com hora para acabar.</p>';
-    return;
-  }
+export function focusBuilderHTML(inHome){
+  var k=today(),undone=S.tasks.filter(function(t){return !t.done}).sort(function(a,b){return ((b.plan===k)-(a.plan===k))||cmp(a,b)});
+  var cur=effTaskId();
+  var opts=undone.map(function(t){return '<option value="'+t.id+'"'+(t.id===cur?' selected':'')+'>'+esc(t.text)+'</option>'}).join('')+'<option value="__other"'+(cur===''?' selected':'')+'>Outra coisa / Foco livre</option>';
+  return '<div class="'+(inHome?'forest-card':'')+'">'+
+    '<div class="forest-head">'+
+      previewStageHTML()+
+      '<h2>'+(inHome?'Prepare sua próxima xícara':'Um bloco, uma coisa.')+'</h2>'+
+      '<p class="muted small" style="margin-top:4px">Escolha a xícara, defina o tempo e deixe o celular de lado.</p>'+
+    '</div>'+
+    cupPickerHTML()+
+    '<p class="label">No que você vai focar?</p>'+
+    '<select class="field" id="taskSel" aria-label="Tarefa" style="margin-top:8px">'+opts+'</select>'+
+    (cur===''?'<input class="field" id="customLabel" type="text" maxlength="60" placeholder="Descreva em poucas palavras" style="margin-top:10px">':'')+
+    '<p class="label">Categoria</p><div class="chips">'+catChips()+'</div>'+
+    durHTML()+kindHTML()+
+    '<label class="check-row"><input type="checkbox" id="fAwake"'+(S.keepAwake?' checked':'')+'> Manter a tela ligada durante o foco</label>'+
+    '<div class="stack"><button class="btn block" data-act="start-focus">Preparar café</button></div>'+
+  '</div>';
+}
+export function activeFocusHTML(){
+  var f=S.focus;
   if(f.mode==='focus'){
     var paused=!!f.pausedAt,rem=paused?f.endTime-f.pausedAt:f.endTime-Date.now();
     var gu=UI.giveUp?'<button class="btn quiet block danger" data-act="stop-focus">Tenho certeza: quebrar a xícara</button>':'<button class="btn quiet block" data-act="give-up">Desistir</button>';
     var btns=f.kind==='parcial'?(paused?'<div class="stack"><button class="btn block" data-act="resume">Retomar</button><button class="btn quiet block" data-act="end-partial">Encerrar foco</button></div>':'<div class="stack"><button class="btn sun block" data-act="to-urge">A vontade bateu</button><button class="btn quiet block" data-act="pause">Pausar</button><button class="btn quiet block" data-act="end-partial">Encerrar foco</button></div>'):(paused?'<div class="stack"><button class="btn block" data-act="resume">Retomar o foco</button>'+gu+'</div>':'<div class="stack"><button class="btn sun block" data-act="to-urge">A vontade bateu</button><button class="btn quiet block" data-act="pause">Pausa de emergência</button>'+gu+'</div>');
     var sim=(S.testMode&&!paused&&f.kind!=='parcial')?'<div class="row"><button class="btn quiet small" data-act="sim-away" data-v="10">Simular 10 s fora</button><button class="btn quiet small" data-act="sim-away" data-v="30">Simular 30 s fora</button><button class="btn quiet small" data-act="sim-away" data-v="120">Simular 2 min fora</button></div>':'';
-    el.innerHTML=focusHero()+'<h2>'+esc(f.label)+'</h2><p class="muted">'+esc(f.cat||'')+(f.kind==='parcial'?', foco parcial':', foco total')+'</p>'+(paused?(f.kind==='parcial'?'<div class="nudge small">Em pausa. O tempo está parado e você pode retomar quando quiser.</div>':'<div class="nudge small">Pausa de emergência: o tempo está parado (máximo de 10 minutos).</div>'):'')+
+    var stage=f.model!=null?'<div class="forest-stage">'+cupImg({ok:true,model:f.model,id:''},'hero-img',false)+'</div>':focusHero();
+    return stage+'<h2>'+esc(f.label)+'</h2><p class="muted">'+esc(f.cat||'')+' · Xícara '+esc(cupMeta(f.model||0).name)+(f.kind==='parcial'?' · foco parcial':' · foco total')+'</p>'+(paused?(f.kind==='parcial'?'<div class="nudge small">Em pausa. O tempo está parado e você pode retomar quando quiser.</div>':'<div class="nudge small">Pausa de emergência: o tempo está parado (máximo de 10 minutos).</div>'):'')+
       '<div class="bigtime" id="focusTime">'+mmss(rem)+'</div><div class="bar-track"><div class="bar-fill" id="focusBar"></div></div>'+
+      (paused?'':ambienceHTML())+
       (paused?'':(f.kind==='parcial'?'<p class="lead">Foco flexível: pode sair do app, pausar e encerrar quando precisar. Nada quebra.</p>':'<p class="lead">Pode bloquear a tela. Ao voltar, o Brewer pergunta o que aconteceu.</p>'))+btns+sim;
-  }else if(f.mode==='done'){
+  }
+  if(f.mode==='done'){
     var task=f.taskId?findTask(f.taskId):null;
     var body=f.starter
       ?'<p class="lead">Você começou, que era a parte difícil. Quer continuar?</p><div class="stack"><button class="btn block" data-act="more-block">Continuar por mais 25 min</button>'+(task&&!task.done?'<button class="btn quiet block" data-act="done-task">Terminei a tarefa</button>':'')+'<button class="btn quiet block" data-act="skip-break">Parar por aqui</button></div>'
       :'<p class="lead">Você ficou '+Math.max(1,Math.round(f.total/60))+' minutos em '+esc(f.cat&&f.cat!=='Sem categoria'?f.cat:'uma coisa só')+'. Agora a pausa é sua, com hora para acabar.</p><div class="stack"><button class="btn sun block" data-act="start-break">Pausa de 5 min, celular liberado</button>'+(task&&!task.done?'<button class="btn quiet block" data-act="done-task">Marcar &ldquo;'+esc(task.text)+'&rdquo; como feita</button>':'')+'<button class="btn quiet block" data-act="skip-break">Pular pausa</button></div>';
-    el.innerHTML='<h1>'+(f.kind==='parcial'?'Foco parcial registrado.':'Bloco feito.')+'</h1>'+cupShow(f)+(f.kind==='parcial'?partialDone(f,task):body);
-  }else if(f.mode==='break'){
-    el.innerHTML='<h2>Pausa</h2><div class="bigtime" id="focusTime">'+mmss(f.endTime-Date.now())+'</div>'+
+    return '<h1>'+(f.kind==='parcial'?'Foco parcial registrado.':'Bloco feito.')+'</h1>'+cupShow(f)+(f.kind==='parcial'?partialDone(f,task):body);
+  }
+  if(f.mode==='break'){
+    return '<h2>Pausa</h2><div class="bigtime" id="focusTime">'+mmss(f.endTime-Date.now())+'</div>'+
       '<div class="bar-track"><div class="bar-fill" id="focusBar"></div></div>'+
       '<p class="lead">Celular liberado até o fim do tempo. Quando acabar, ele volta para o bolso.</p>'+
       '<div class="stack"><button class="btn quiet block" data-act="skip-break">Encerrar pausa</button></div>';
-  }else if(f.mode==='failed'){
-    el.innerHTML='<h1>'+(f.cupId?'A xícara quebrou.':'Bloco interrompido.')+'</h1>'+cupShow(f)+'<p class="lead">'+esc(f.msg)+' Acontece. O que vale é tentar de novo agora.</p><div class="stack"><button class="btn block" data-act="skip-break">Tentar de novo</button><button class="btn quiet block" data-act="tab" data-tab="colecao">Ver coleção</button></div>';
-  }else{
-    el.innerHTML='<h1>A pausa acabou.</h1><p class="lead">Combinado é combinado. Hora do próximo bloco.</p><div class="stack"><button class="btn block" data-act="skip-break">Novo bloco</button></div>';
   }
+  if(f.mode==='failed'){
+    return '<h1>'+(f.cupId?'A xícara quebrou.':'Bloco interrompido.')+'</h1>'+cupShow(f)+'<p class="lead">'+esc(f.msg)+' Acontece. O que vale é tentar de novo agora.</p><div class="stack"><button class="btn block" data-act="skip-break">Tentar de novo</button><button class="btn quiet block" data-act="tab" data-tab="colecao">Ver coleção</button></div>';
+  }
+  return '<h1>A pausa acabou.</h1><p class="lead">Combinado é combinado. Hora do próximo bloco.</p><div class="stack"><button class="btn block" data-act="skip-break">Novo bloco</button></div>';
+}
+export function renderFoco(){
+  var f=S.focus,el=$('#tab-foco');
+  if(f&&UI.pre&&f.mode!=='focus'){archiveFocus();f=S.focus}
+  if(!f){
+    if(UI.pre){el.innerHTML=renderPreHTML();return}
+    el.innerHTML=focusBuilderHTML(false);
+    return;
+  }
+  el.innerHTML=activeFocusHTML();
 }

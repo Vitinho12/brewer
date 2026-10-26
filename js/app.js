@@ -1,5 +1,5 @@
 import { $, mmss, uid, today, addDays, toMin, nowMin, fmtShort, mondayOf } from './utils.js';
-import { S, UI, SH, resetState, save, L, cmp, findTask, normTask, setDone, planned, setPlan, archiveFocus, currentGoal, updateTheme, screenStatusHTML, CUP_ASSETS, cupMeta, addCup, cupFallback, heroFallbackHTML, holdScreen, releaseLock, alertUser, toast, closeSheet } from './state.js';
+import { S, UI, SH, resetState, save, L, cmp, findTask, normTask, setDone, planned, setPlan, archiveFocus, currentGoal, updateTheme, screenStatusHTML, CUP_ASSETS, cupMeta, addCup, cupFallback, heroFallbackHTML, holdScreen, releaseLock, setAmbience, alertUser, toast, closeSheet } from './state.js';
 import { gcCfg, gcResetToken, gcRun, gcDiag, gcDisconnect, mdSync, mdFile, confirmInbox, ignoreInbox } from './sync.js';
 import { renderHoje } from './views/hoje.js';
 import { suggestionsFor, placeSuggestion, plannerSheet, blockSheet, PRESETS, dayChips, routineSheet, renderAgenda } from './views/agenda.js';
@@ -28,7 +28,7 @@ export function checkGateParam(){
 }
 export function go(tab){
   var f=S.focus;
-  if(f&&f.mode==='failed'&&((S.tab==='foco'&&tab!=='foco')||(S.tab!=='foco'&&tab==='foco')))archiveFocus();
+  if(f&&f.mode==='failed'&&((['foco','hoje'].indexOf(S.tab)>-1&&['foco','hoje'].indexOf(tab)<0)||(['foco','hoje'].indexOf(S.tab)<0&&['foco','hoje'].indexOf(tab)>-1)))archiveFocus();
   if(tab==='vontade'&&(!S.wait||S.wait.phase==='result'||(S.wait.phase==='gate'&&Date.now()>=S.wait.end)))startGate('Instagram');
   else if(tab!=='vontade'&&S.wait&&S.wait.phase==='gate')S.wait=null;
   S.tab=tab;save();render();
@@ -46,8 +46,8 @@ export function render(){
 }
 export function renderRun(){
   var f=S.focus,el=$('#runpill');
-  if(f&&f.mode==='focus'&&S.tab!=='foco'){
-    el.innerHTML='<button data-act="tab" data-tab="foco">Foco em andamento: <b id="runTime">'+mmss(f.endTime-Date.now())+'</b></button>';
+  if(f&&f.mode==='focus'&&S.tab!=='foco'&&S.tab!=='hoje'){
+    el.innerHTML='<button data-act="tab" data-tab="hoje">Foco em andamento: <b id="runTime">'+mmss(f.endTime-Date.now())+'</b></button>';
   }else el.innerHTML='';
 }
 
@@ -178,7 +178,9 @@ document.addEventListener('click',function(e){
       S.moodle.baseUrl=mu;if(mt)S.moodle.token=mt;save();toast('Conexão salva neste aparelho.');render();break;
     case 'md-clear':S.moodle.token='';save();toast('Token apagado.');render();break;
     case 'md-sync':mdSync();break;
-    case 'focus-task':S.draft.taskId=id;S.draft.cat='';save();go('foco');break;
+    case 'cup-pick':S.draft.cupModel=el.dataset.v===''?null:+el.dataset.v;save();render();break;
+    case 'amb-set':setAmbience(el.dataset.v);render();break;
+    case 'focus-task':S.draft.taskId=id;S.draft.cat='';save();go('hoje');break;
     case 'dur-minus':S.draft.mins=Math.max(5,(S.draft.mins<5?5:Math.round(S.draft.mins/5)*5)-5);save();updateDur();break;
     case 'dur-plus':S.draft.mins=Math.min(720,(S.draft.mins<5?0:Math.round(S.draft.mins/5)*5)+5);save();updateDur();break;
     case 'dur-test':S.draft.mins=0.1667;save();updateDur();break;

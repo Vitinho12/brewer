@@ -3,11 +3,11 @@ import { $, esc, pl, uid, today, parseKey, addDays, toMin, fromMin, fmtHM, monda
 export var KEY='brewer.v1';
 
 /* ---------- estado ---------- */
-export var UI={agDay:null,agView:'dia',revView:'hoje',showDone:false,pick:false,open:{},colView:'set',giveUp:false,catRange:7,asking:false,tkKind:'pessoal',tkP:'pend',tkF:'new',mdCfg:false,mdBusy:false,mdErr:'',showIgn:false,listening:false,pre:null,preTimer:0,sg:[],sgDay:'',dismissed:{},hideSug:''};
+export var UI={agDay:null,agView:'dia',revView:'hoje',showDone:false,pick:false,open:{},colView:'set',giveUp:false,catRange:7,asking:false,tkKind:'pessoal',tkP:'pend',tkF:'new',mdCfg:false,mdBusy:false,mdErr:'',showIgn:false,listening:false,pre:null,preTimer:0,sg:[],sgDay:'',dismissed:{},hideSug:'',amb:'off'};
 export var SH={};
 export function setSH(val){SH=val}
 
-export function fresh(){return {v:3,tasks:[],blocks:{},routines:[],rdone:{},log:{},urges:[],focus:null,wait:null,draft:{taskId:'',mins:25,kind:'total'},tab:'hoje',cups:[],unlocked:[],goal:240,goalStart:'',weekly1:true,testWeeks:0,keepAwake:true,interruptions:[],integrations:{googleCalendar:{status:'off'}},forceModel:null,testMode:false,sessions:[],sessMig:false,estLog:[],inbox:[],moodle:{baseUrl:'',token:'',ignored:{},confirmed:{},lastSync:0,lastResult:null},cats:['Estudo','Trabalho','Projeto pessoal','Saúde','Casa','Outro'],gateShortcut:'Liberar Instagram'}}
+export function fresh(){return {v:3,tasks:[],blocks:{},routines:[],rdone:{},log:{},urges:[],focus:null,wait:null,draft:{taskId:'',mins:25,kind:'total',cupModel:null},tab:'hoje',cups:[],unlocked:[],goal:240,goalStart:'',weekly1:true,testWeeks:0,keepAwake:true,interruptions:[],integrations:{googleCalendar:{status:'off'}},forceModel:null,testMode:false,sessions:[],sessMig:false,estLog:[],inbox:[],moodle:{baseUrl:'',token:'',ignored:{},confirmed:{},lastSync:0,lastResult:null},cats:['Estudo','Trabalho','Projeto pessoal','Saúde','Casa','Outro'],gateShortcut:'Liberar Instagram'}}
 
 /* tarefa: campos novos sem remover nenhum dos antigos */
 export function normTask(t){
@@ -59,10 +59,43 @@ export function subjects(){var m={};S.tasks.forEach(function(t){if(t.subject)m[t
 /* a tela de resultado de um foco quebrado é "consumida" ao sair/entrar na aba Foco; os dados da sessão ficam em S.sessions, S.cups e S.lastFocus */
 export function archiveFocus(){var f=S.focus;if(!f||f.mode==='focus')return;S.lastFocus=f;S.focus=null}
 
-/* ---------- avisos, tela ligada e modal ---------- */
+/* ---------- avisos, som ambiente, tela ligada e modal ---------- */
 var lock=null;
 export function holdScreen(){if(!S.keepAwake)return;try{if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){lock=l}).catch(function(){})}}catch(e){}}
-export function releaseLock(){try{if(lock)lock.release()}catch(e){}lock=null}
+export function releaseLock(){try{if(lock)lock.release()}catch(e){}lock=null;stopAmbience()}
+
+var ambCtx=null,ambNode=null,ambGain=null,ambLfo=null;
+export function stopAmbience(){
+  UI.amb='off';
+  try{if(ambNode)ambNode.stop()}catch(e){}
+  try{if(ambLfo)ambLfo.stop()}catch(e){}
+  try{if(ambCtx)ambCtx.close()}catch(e){}
+  ambNode=null;ambLfo=null;ambGain=null;ambCtx=null;
+}
+export function setAmbience(mode){
+  stopAmbience();
+  if(!mode||mode==='off')return;
+  try{
+    var A=window.AudioContext||window.webkitAudioContext;if(!A)return;
+    var ctx=new A(),sr=ctx.sampleRate,len=sr*3,buf=ctx.createBuffer(1,len,sr),data=buf.getChannelData(0);
+    var last=0;
+    for(var i=0;i<len;i++){
+      var w=Math.random()*2-1;
+      if(mode==='cafe'){last=(last+0.02*w)/1.02;data[i]=last*3.2}
+      else{last=(last+0.08*w)/1.08;data[i]=last*1.8}
+    }
+    var src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
+    var flt=ctx.createBiquadFilter();flt.type='lowpass';flt.frequency.value=mode==='cafe'?420:950;
+    var g=ctx.createGain();g.gain.value=mode==='cafe'?0.18:0.12;
+    if(mode==='rain'){
+      var lfo=ctx.createOscillator(),lg=ctx.createGain();
+      lfo.frequency.value=0.18;lg.gain.value=0.04;
+      lfo.connect(lg);lg.connect(g.gain);lfo.start();ambLfo=lfo;
+    }
+    src.connect(flt);flt.connect(g);g.connect(ctx.destination);src.start();
+    ambCtx=ctx;ambNode=src;ambGain=g;UI.amb=mode;
+  }catch(e){UI.amb='off'}
+}
 export function alertUser(){
   try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
   try{
@@ -171,9 +204,12 @@ export function cupSrc(c){
   if(c.ok)return CUP_ASSETS.good[c.model]||'';
   var b=CUP_ASSETS.broken;return Array.isArray(b)?(b[c.model]||b[0]||''):(b||'');
 }
+export var CAT_COLORS={'Estudo':'#4A7FAE','Trabalho':'#C8654B','Projeto pessoal':'#E3AE3C','Saúde':'#2A8E69','Casa':'#8A9A4B','Outro':'#7A4524'};
+export function catColor(cat){return CAT_COLORS[cat]||'#9A7B5B'}
 export function pickModel(){
   var n=CUP_ASSETS.good.length;
   if(S.forceModel!=null){var m=S.forceModel%n;S.forceModel=null;return m}
+  if(S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1)return +S.draft.cupModel;
   for(var i=0;i<n;i++)if(S.unlocked.indexOf(i)<0)return i;
   return S.cups.length%n;
 }

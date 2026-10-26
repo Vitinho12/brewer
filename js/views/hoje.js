@@ -1,8 +1,9 @@
 import { $, esc, pl, today, addDays, parseKey, toMin, nowMin, cap, fmtLong, fmtHM, CHECK } from '../utils.js';
 import { S, UI, L, cmp, planned, dayItems, routineRow, phaseBadge, cupCard } from '../state.js';
 import { sugCardHTML } from './agenda.js';
+import { focusBuilderHTML, renderPreHTML, activeFocusHTML } from './foco.js';
 
-/* ---------- HOJE ---------- */
+/* ---------- HOJE (Com Estação de Foco estilo Forest no topo) ---------- */
 export function greeting(){var h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'}
 
 export function renderHoje(){
@@ -10,15 +11,25 @@ export function renderHoje(){
   var items=dayItems(k).filter(function(i){return !i.allDay});
   var cur=items.find(function(i){return toMin(i.start)<=nm&&nm<toMin(i.end)});
   var nxt=items.find(function(i){return toMin(i.start)>nm});
-  var pl3=planned(k),openPlanned=pl3.filter(function(t){return !t.done});
+  var pl3=planned(k);
   var yest=L(addDays(k,-1)).next;
+
+  /* Se houver ritual ou foco ativo no momento, destaca no topo do Hoje */
+  var topFocus='';
+  if(S.focus){
+    topFocus='<div class="forest-card">'+activeFocusHTML()+'</div>';
+  }else if(UI.pre){
+    topFocus='<div class="forest-card">'+renderPreHTML()+'</div>';
+  }else{
+    topFocus=focusBuilderHTML(true);
+  }
 
   var now='';
   var focusItem=cur||nxt;
   if(focusItem){
-    var when=cur?'Agora, até '+cur.end:'A seguir, às '+nxt.start;
+    var when=cur?'Agora na agenda, até '+cur.end:'A seguir na agenda, às '+nxt.start;
     var act=focusItem.kind==='bloco'
-      ?'<div class="row"><button class="btn small" data-act="focus-block" data-k="'+k+'" data-id="'+focusItem.id+'">Começar foco</button></div>'
+      ?'<div class="row"><button class="btn small" data-act="focus-block" data-k="'+k+'" data-id="'+focusItem.id+'">Focar neste compromisso</button></div>'
       :'<div class="row"><button class="btn small" data-act="r-open" data-k="'+k+'" data-r="'+focusItem.id+'">Abrir rotina</button></div>';
     now='<div class="now-block"><h2>'+esc(focusItem.title)+'</h2><p class="muted">'+when+'</p>'+act+'</div>';
   }else{
@@ -50,7 +61,8 @@ export function renderHoje(){
 
   $('#tab-hoje').innerHTML=
     '<div class="mark"><svg width="24" height="22" viewBox="0 0 24 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 8h13v5a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V8z"/><path d="M16 10h2.5a2.5 2.5 0 0 1 0 5H16"/><path d="M7 2c-1 1.4 1 2.6 0 4M11 2c-1 1.4 1 2.6 0 4"/></svg>Brewer</div>'+
-    phaseBadge()+'<h1>'+greeting()+'.</h1><p class="lead">'+cap(fmtLong(k))+'</p>'+yline+nudge+now+sugCardHTML()+cupCard()+prio+routines+
-    '<div class="sec"><h2>Hoje até agora</h2><div style="margin-top:8px">'+stats+'</div><div class="row"><button class="btn quiet small" data-act="tab" data-tab="foco">Iniciar bloco de foco</button></div></div>'+
-    '<p class="small muted" style="margin-top:30px">Dica: você pode bloquear a tela durante o foco. Ao voltar, o Brewer pergunta o que aconteceu.</p>';
+    phaseBadge()+'<h1>'+greeting()+'.</h1><p class="lead">'+cap(fmtLong(k))+'</p>'+
+    topFocus+
+    yline+nudge+sugCardHTML()+prio+now+routines+cupCard()+
+    '<div class="sec"><h2>Hoje até agora</h2><div style="margin-top:8px">'+stats+'</div></div>';
 }

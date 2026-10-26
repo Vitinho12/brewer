@@ -226,3 +226,37 @@ body[data-theme="9"]{--bg:#181210;--surface:#251D19;--ink:#F4EADD;--muted:#BBA89
 }
 
 .ios-hint{margin:22px 0 6px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:14px;color:var(--muted);font-size:13px}
+
+/* estação de foco estilo Forest no Hoje e ritual V60 animado */
+.forest-card{margin-top:18px;padding:22px 18px;border-radius:26px;background:var(--surface);border:1px solid var(--line);box-shadow:0 10px 28px rgba(42,29,20,.06)}
+.forest-head{text-align:center}
+.forest-stage{position:relative;width:min(64%,220px);aspect-ratio:1;margin:4px auto 10px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,var(--sea-soft) 0%,transparent 72%)}
+.cup-picker{display:flex;gap:8px;overflow-x:auto;padding:8px 2px 6px;margin-top:8px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.cup-picker::-webkit-scrollbar{display:none}
+.cp-item{flex:none;display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);font-size:13px;font-weight:600;white-space:nowrap}
+.cp-item[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink)}
+.cp-dot{width:12px;height:12px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.15)}
+.v60-wrap{width:200px;height:210px;margin:8px auto 12px;display:block}
+.v60-stream{stroke-dasharray:6 6;animation:streamflow .45s linear infinite}
+.v60-drop1{animation:dropfall 1.1s ease-in infinite}
+.v60-drop2{animation:dropfall 1.1s ease-in .55s infinite}
+.v60-liquid{transform-origin:center bottom;animation:liquidrise 2.4s ease-out forwards}
+.v60-steam1{animation:steamup 2.2s ease-in-out infinite}
+.v60-steam2{animation:steamup 2.2s ease-in-out .8s infinite}
+@keyframes streamflow{to{stroke-dashoffset:-12}}
+@keyframes dropfall{0%{transform:translateY(0);opacity:1}80%{opacity:1}100%{transform:translateY(26px);opacity:0}}
+@keyframes liquidrise{from{transform:scaleY(.15)}to{transform:scaleY(1)}}
+@keyframes steamup{0%,100%{transform:translateY(0);opacity:.25}50%{transform:translateY(-6px);opacity:.75}}
+.amb-bar{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px}
+.amb-btn{padding:6px 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;min-height:36px}
+.amb-btn[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink)}
+
+/* prateleira da coleção com etiquetas visuais */
+.tray{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px 14px 16px;margin-top:18px;box-shadow:0 6px 20px rgba(42,29,20,.05)}
+.tray-head{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;padding:0 4px}
+.tray-head .tlabel{margin:0;text-align:left}
+.tray-sum{font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--sea-soft);color:var(--sea)}
+.cupgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 6px}
+.cup-cell{display:flex;flex-direction:column;align-items:center;text-align:center}
+.cup-tag{margin-top:3px;font-size:11px;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 6px;border-radius:99px;background:var(--bg);border:1px solid var(--line)}
+.cup-tag-dot{width:7px;height:7px;border-radius:50%;flex:none}

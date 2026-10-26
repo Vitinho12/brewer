@@ -7,7 +7,7 @@ export var UI={agDay:null,agView:'dia',revView:'hoje',showDone:false,pick:false,
 export var SH={};
 export function setSH(val){SH=val}
 
-export function fresh(){return {v:3,tasks:[],blocks:{},routines:[],rdone:{},log:{},urges:[],focus:null,wait:null,draft:{taskId:'',mins:25,kind:'total'},tab:'hoje',cups:[],unlocked:[],goal:240,goalStart:'',weekly1:true,testWeeks:0,keepAwake:true,interruptions:[],integrations:{googleCalendar:{status:'off'}},forceModel:null,testMode:false,sessions:[],sessMig:false,estLog:[],inbox:[],moodle:{baseUrl:'',token:'',ignored:{},confirmed:{},lastSync:0,lastResult:null},cats:['Estudo','Trabalho','Projeto pessoal','Saúde','Casa','Outro']}}
+export function fresh(){return {v:3,tasks:[],blocks:{},routines:[],rdone:{},log:{},urges:[],focus:null,wait:null,draft:{taskId:'',mins:25,kind:'total'},tab:'hoje',cups:[],unlocked:[],goal:240,goalStart:'',weekly1:true,testWeeks:0,keepAwake:true,interruptions:[],integrations:{googleCalendar:{status:'off'}},forceModel:null,testMode:false,sessions:[],sessMig:false,estLog:[],inbox:[],moodle:{baseUrl:'',token:'',ignored:{},confirmed:{},lastSync:0,lastResult:null},cats:['Estudo','Trabalho','Projeto pessoal','Saúde','Casa','Outro'],gateShortcut:'Liberar Instagram'}}
 
 /* tarefa: campos novos sem remover nenhum dos antigos */
 export function normTask(t){
@@ -45,7 +45,7 @@ export function load(){
 export var S=load();
 export function resetState(){S=fresh()}
 export function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-export function L(d){d=d||today();if(!S.log[d])S.log[d]={focus:0,resisted:0,gave:0,screen:null,win:'',next:'',cats:{}};return S.log[d]}
+export function L(d){d=d||today();if(!S.log[d])S.log[d]={focus:0,resisted:0,gave:0,screen:null,win:'',next:'',cats:{},gateCount:0};if(S.log[d].gateCount==null)S.log[d].gateCount=0;return S.log[d]}
 export function cmp(a,b){var x=a.due||'9999',y=b.due||'9999';return (a.prio-b.prio)||(x<y?-1:x>y?1:0)}
 export function findTask(id){return S.tasks.find(function(t){return t.id===id})}
 export function planned(k){return S.tasks.filter(function(t){return t.plan===k})}

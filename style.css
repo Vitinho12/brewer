@@ -103,6 +103,10 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:42px;backgrou
 .feels{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
 .feel{min-height:50px;padding:0 20px;border-radius:999px;background:var(--surface);border:2px solid var(--line);font-weight:600}
 .feel:active{border-color:var(--sea)}
+.feel[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink)}
+.gate-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;background:var(--sea-soft);color:var(--sea);font-size:13px;font-weight:700;margin-bottom:12px}
+.gate-warn{border-color:var(--danger);background:var(--surface)}
+body.gate-lock .bar{pointer-events:none;opacity:.35;transition:opacity .25s ease}
 .curve{width:100%;height:auto;display:block;margin-top:22px;overflow:visible}
 .curve text{fill:var(--muted);font-size:11px;text-anchor:middle;font-family:Figtree,sans-serif}
 .wait-time{font-family:"Bricolage Grotesque",Figtree,sans-serif;font-weight:700;font-size:56px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1;margin-top:14px}

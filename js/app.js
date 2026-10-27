@@ -134,22 +134,46 @@ function markAway(){
   var f=S.focus;
   if(f&&f.mode==='focus'&&f.kind!=='parcial'&&!f.pausedAt&&!f.hiddenAt){f.hiddenAt=Date.now();save()}
   else if(f&&f.mode==='failed'){archiveFocus();save()}
-  /* se saiu do Brewer enquanto estava na tela da barreira, reseta para que a próxima vinda do atalho reinicie o cronômetro */
-  if(S.tab==='vontade'&&S.wait&&S.wait.phase==='gate'){S.wait=null;save()}
+  /* Sempre que sair/fechar o Brewer (se não estiver em foco ativo), engatilha a tela Bateu a Vontade para a próxima abertura */
+  if(!f||(f.mode!=='focus'&&f.mode!=='break')){
+    S.tab='vontade';
+    S.wait=null;
+    save();
+  }else if(S.tab==='vontade'&&S.wait&&S.wait.phase==='gate'){
+    S.wait=null;
+    save();
+  }
 }
 document.addEventListener('visibilitychange',function(){
   var f=S.focus;
   if(document.hidden){markAway();return}
   if(checkGateParam()){render();return}
-  if(S.tab==='vontade'&&(!S.wait||S.wait.phase==='gate')){
+  if(!f||(f.mode!=='focus'&&f.mode!=='break')){
     var prevApp=(S.wait&&S.wait.app)||'Instagram';
-    startGate(prevApp);render();return;
+    S.tab='vontade';
+    startGate(prevApp);
+    render();
+    return;
+  }
+  if(S.tab==='vontade'&&(!S.wait||S.wait.phase==='gate')){
+    var prevApp2=(S.wait&&S.wait.app)||'Instagram';
+    startGate(prevApp2);render();return;
   }
   if((f&&f.mode==='focus'&&!f.pausedAt)||(S.wait&&(S.wait.phase==='wait'||S.wait.phase==='gate')))holdScreen();
   render();checkReturn();updateLive();
 });
 window.addEventListener('pagehide',markAway);
-window.addEventListener('pageshow',function(){if(checkGateParam())render();checkReturn()});
+window.addEventListener('pageshow',function(e){
+  if(checkGateParam()){render();return}
+  var f=S.focus;
+  if(e&&e.persisted&&(!f||(f.mode!=='focus'&&f.mode!=='break'))){
+    S.tab='vontade';
+    startGate((S.wait&&S.wait.app)||'Instagram');
+    render();
+    return;
+  }
+  checkReturn();
+});
 window.addEventListener('focus',function(){if(checkGateParam())render()});
 window.addEventListener('hashchange',function(){if(checkGateParam())render()});
 window.addEventListener('popstate',function(){if(checkGateParam())render()});
@@ -257,7 +281,7 @@ document.addEventListener('click',function(e){
     case 'feel':selectFeel(el.dataset.v);break;
     case 'start-10m':start10m();break;
     case 'gate-stay':gateStay();break;
-    case 'gate-open-app':gateOpenApp();break;
+    case 'gate-open-app':gateOpenApp(el.dataset.app);break;
     case 'gate-cfg':gateConfig();break;
     case 'wait-pass':finishWait('resisted');break;
     case 'wait-gave':finishWait('gave');break;
@@ -382,6 +406,13 @@ document.addEventListener('change',function(e){
 });
 
 document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='durRange'){S.draft.mins=+t.value;updateDur()}});
-checkGateParam();
+if(!checkGateParam()){
+  var f0=S.focus;
+  if(!f0||(f0.mode!=='focus'&&f0.mode!=='break')){
+    S.tab='vontade';
+    startGate((S.wait&&S.wait.app)||'Instagram');
+    save();
+  }
+}
 render();
 checkReturn();

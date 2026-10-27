@@ -87,7 +87,7 @@ export function gateStay(){
   toast('Boa escolha! +1 vontade que passou.');
   go(S.focus&&S.focus.mode==='focus'?'foco':'hoje');
 }
-export function gateOpenApp(){
+export function gateOpenApp(targetApp){
   var s=S.wait;
   if(!s||s.phase!=='gate'||Date.now()<s.end||!s.feel)return;
   var lg=L();
@@ -98,21 +98,15 @@ export function gateOpenApp(){
   }else{
     logUrge(s.feel,'leisure');
   }
-  var appTarget=s.app||'Instagram';
-  var shName=S.gateShortcut||'Liberar Instagram';
-  var scheme=getAppScheme(appTarget);
+  var appTarget=targetApp||s.app||'Instagram';
+  var isTw=appTarget.toLowerCase().indexOf('twit')>-1||appTarget.toLowerCase()==='x';
+  var shName=isTw?'Liberar Twitter':(S.gateShortcut||'Liberar Instagram');
 
-  S.wait=null;S.tab='hoje';releaseLock();clearGateURL();save();render();
+  S.wait=null;S.tab='vontade';releaseLock();clearGateURL();save();render();
 
   try{
     window.location.href='shortcuts://run-shortcut?name='+encodeURIComponent(shName)+'&input=text&text='+encodeURIComponent(appTarget);
   }catch(e){}
-
-  if(scheme){
-    setTimeout(function(){
-      try{window.location.href=scheme}catch(err){}
-    },700);
-  }
 }
 export function gateConfig(){
   var cur=S.gateShortcut||'Liberar Instagram';
@@ -189,10 +183,15 @@ export function renderVontade(){
         tipBox+
         '<div class="stack" style="margin-top:22px">'+
           '<button class="btn block" data-act="gate-stay">'+(f&&f.mode==='focus'?'Voltar para o foco (não abrir)':'🛡️ Ficar no Brewer (Não abrir)')+'</button>'+
-          '<button class="btn quiet block" id="gateOpenBtn" data-act="gate-open-app"'+(ready?'':' disabled')+'>'+esc(gateBtnText(s,0))+'</button>'+
+          (ready
+            ?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">'+
+               '<button class="btn quiet block" data-act="gate-open-app" data-app="Instagram">Liberar Instagram (5m)</button>'+
+               '<button class="btn quiet block" data-act="gate-open-app" data-app="Twitter">Liberar Twitter (5m)</button>'+
+             '</div>'
+            :'<button class="btn quiet block" id="gateOpenBtn" data-act="gate-open-app" disabled>'+esc(gateBtnText(s,0))+'</button>')+
           '<button class="ghost small" data-act="start-10m" style="text-align:center;margin-top:4px">Ou esperar 10 min na curva da vontade</button>'+
         '</div>'+
-        '<p class="small muted" style="margin-top:22px;text-align:center">Atalho do iPhone: <b>'+esc(S.gateShortcut||'Liberar '+(s.app||'Instagram'))+'</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>'+
+        '<p class="small muted" style="margin-top:22px;text-align:center">Atalhos: <b>Liberar Instagram</b> / <b>Liberar Twitter</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>'+
       '</div>';
     return;
   }

@@ -1,5 +1,5 @@
 /* Brewer: cache offline. Troque o número da versão sempre que alterar arquivos publicados. */
-const CACHE = 'brewer-v10';
+const CACHE = 'brewer-v12';
 const APP_SHELL = [
   './',
   './index.html',
@@ -8,6 +8,7 @@ const APP_SHELL = [
   './js/utils.js',
   './js/state.js',
   './js/sync.js',
+  './js/notifications.js',
   './js/views/hoje.js',
   './js/views/agenda.js',
   './js/views/tarefas.js',
@@ -42,4 +43,40 @@ self.addEventListener('fetch', e => {
     const net = fetch(e.request).then(r => { if (r && r.ok) cache.put(e.request, r.clone()); return r; }).catch(() => cached || cache.match('./index.html'));
     return cached || net;
   }));
+});
+
+/* ---------- NOTIFICAÇÕES & PUSH ---------- */
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow('./');
+      }
+    })
+  );
+});
+
+self.addEventListener('push', e => {
+  let data = { title: '☕ Brewer', body: 'Hora do seu ritual de foco!', tag: 'brewer-push' };
+  try {
+    if (e.data) data = Object.assign(data, e.data.json());
+  } catch(err) {
+    if (e.data) data.body = e.data.text();
+  }
+  e.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: './icons/icon-192.png',
+      badge: './icons/icon-192.png',
+      tag: data.tag || 'brewer-push',
+      renotify: true,
+      vibrate: [200, 100, 200]
+    })
+  );
 });

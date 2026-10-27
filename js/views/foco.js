@@ -1,6 +1,7 @@
 import { $, esc, pl, mmss, uid, today, fmtHM, fmtDur, seg } from '../utils.js';
 import { S, UI, L, save, cmp, findTask, archiveFocus, CUP_ASSETS, cupMeta, cupImg, pickModel, addCup, cupShow, v60CarafeSVG, holdScreen, releaseLock, setAmbience, alertUser, toast, openSheet, closeSheet } from '../state.js';
 import { render, go } from '../app.js';
+import { notifyFocusDone, notifyBreakDone, notifyAwayWarning, notifyPermission } from '../notifications.js';
 
 /* ---------- foco: motor baseado em timestamps ---------- */
 export var AWAY_ASK_MS=15000,EMERGENCY_MAX_MS=10*60000;
@@ -28,6 +29,7 @@ export function completeFocus(){
   var c=cupWorthy(mins,f)?addCup(true,f,f.test):null;if(c)f.cupId=c.id;
   logSession(f,mins,true,c);
   f.mode='done';delete f.hiddenAt;alertUser();releaseLock();save();render();
+  notifyFocusDone(mins, f.label);
 }
 /* foco parcial: encerrar antes registra o tempo real, sem punição */
 export function endPartial(){
@@ -246,7 +248,8 @@ export function activeFocusHTML(){
       '<div class="bigtime" id="focusTime" style="margin-top:24px">'+mmss(rem)+'</div>'+
       '<div class="bar-track" style="max-width:280px;margin:14px auto 0"><div class="bar-fill" id="focusBar"></div></div>'+
       (paused?'':ambienceHTML())+
-      (paused?'':'<p class="muted small" style="margin-top:16px">'+(f.kind==='parcial'?'Modo flexível: sair não quebra a xícara.':'Pode bloquear a tela. Sair para outro app interrompe o foco.')+'</p>')+
+      (paused?'':(notifyPermission()==='default'?'<div style="margin-top:12px"><button class="btn quiet small" style="min-height:30px;font-size:12px;padding:0 12px" data-act="notify-enable">🔔 Ativar alertas de término</button></div>':'<p class="muted small" style="font-size:11px;margin-top:10px">🔔 Alerta ativado ao terminar</p>'))+
+      (paused?'':'<p class="muted small" style="margin-top:14px">'+(f.kind==='parcial'?'Modo flexível: sair não quebra a xícara.':'Pode bloquear a tela. Sair para outro app interrompe o foco.')+'</p>')+
       '<div style="margin-top:22px">'+btns+sim+'</div>'+
     '</div>';
   }

@@ -8,6 +8,7 @@ import { AWAY_ASK_MS, breakFocus, completeFocus, endPartial, checkReturn, answer
 import { WX, WY, startGate, selectFeel, start10m, gateStay, gateOpenApp, gateConfig, gateBtnText, startWait, logUrge, finishWait, renderVontade } from './views/vontade.js';
 import { renderRevisao } from './views/revisao.js';
 import { renderColecao } from './views/colecao.js';
+import { requestNotifyPermission, notifyBreakDone } from './notifications.js';
 import { renderJornada, simSession, testAdd, testRem, testSkip, testJump, testClear } from './views/jornada.js';
 
 /* ---------- navegação ---------- */
@@ -100,8 +101,8 @@ setInterval(function(){
   var now=Date.now(),ch=false,f=S.focus,gap=now-lastTick;lastTick=now;
   if(f&&f.mode==='focus'&&f.kind!=='parcial'&&!f.pausedAt&&!f.hiddenAt&&gap>AWAY_ASK_MS&&!document.hidden){f.hiddenAt=now-gap;save()}
   if(f&&f.mode==='focus'&&f.hiddenAt&&!document.hidden)checkReturn();
-  if(f&&f.mode==='focus'&&!f.pausedAt&&!f.hiddenAt&&!UI.asking&&(f.kind==='parcial'||!document.hidden)&&now>=f.endTime){completeFocus();return}
-  if(f&&f.mode==='break'&&now>=f.endTime){f.mode='breakdone';ch=true;alertUser()}
+  if(f&&f.mode==='focus'&&!f.pausedAt&&!f.hiddenAt&&!UI.asking&&now>=f.endTime){completeFocus();return}
+  if(f&&f.mode==='break'&&now>=f.endTime){f.mode='breakdone';ch=true;alertUser();notifyBreakDone()}
   if(S.wait&&S.wait.phase==='gate'&&!S.wait.notified&&now>=S.wait.end){S.wait.notified=true;ch=true}
   if(S.wait&&S.wait.phase==='wait'&&now>=S.wait.end){S.wait.phase='end';ch=true;alertUser();releaseLock()}
   if(ch){save();render()}else updateLive();
@@ -134,6 +135,7 @@ document.addEventListener('click',function(e){
   switch(a){
     case 'tab':go(el.dataset.tab);break;
     case 'prio-sheet':prioSheet();break;
+    case 'notify-enable':requestNotifyPermission();break;
     case 'toggle':t=findTask(id);if(t){setDone(t,!t.done);save();render()}break;
     case 'toggle-sh':t=findTask(id);if(t){setDone(t,!t.done);save();prioSheet();render()}break;
     case 'plan':t=findTask(id);if(t){if(setPlan(t,t.plan!==today())){save();render()}}break;

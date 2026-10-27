@@ -2,6 +2,7 @@ import { $, esc, today, addDays, toMin, nowMin, fmtHM, CHECK } from '../utils.js
 import { S, L, cmp, planned, dayItems, streakInfo, phaseIdx, PHASES, openSheet } from '../state.js';
 import { suggestionsFor } from './agenda.js';
 import { focusBuilderHTML } from './foco.js';
+import { notifyPermission } from '../notifications.js';
 
 /* ---------- HOJE (Compacto estilo Forest + Sugestão Inteligente Agenda/Moodle) ---------- */
 export function greeting(){var h=new Date().getHours();return h<12?'Bom dia':h<18?'Boa tarde':'Boa noite'}
@@ -27,12 +28,14 @@ export function prioSheet(){
 export function compactHeaderHTML(lg){
   var s=streakInfo(),i=phaseIdx(s.n),p=PHASES[i];
   var totalCups=S.cups.filter(function(c){return c.ok}).length;
+  var notifPill = notifyPermission()==='default' ? '<button class="phase-badge sm" data-act="notify-enable" aria-label="Ativar notificações">🔔 Alertas</button>' : '';
   return '<div class="hoje-top">'+
     '<div>'+
       '<div class="mark"><svg width="20" height="18" viewBox="0 0 24 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 8h13v5a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6V8z"/><path d="M16 10h2.5a2.5 2.5 0 0 1 0 5H16"/><path d="M7 2c-1 1.4 1 2.6 0 4M11 2c-1 1.4 1 2.6 0 4"/></svg>Brewer</div>'+
       '<p class="small muted" style="margin-top:2px">'+greeting()+' · <b>'+fmtHM(lg.focus)+'</b> hoje</p>'+
     '</div>'+
     '<div class="top-pills">'+
+      notifPill+
       '<button class="phase-badge sm" data-act="tab" data-tab="colecao" aria-label="Abrir prateleira de xícaras">☕ '+totalCups+'</button>'+
       '<button class="phase-badge sm" data-act="tab" data-tab="jornada">'+esc(p.name)+' · '+s.n+'d &rsaquo;</button>'+
     '</div>'+

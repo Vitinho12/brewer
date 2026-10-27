@@ -1,5 +1,5 @@
 import { $, esc, pl, mmss, uid, today, fmtHM, fmtDur, seg } from '../utils.js';
-import { S, UI, L, save, cmp, findTask, archiveFocus, CUP_ASSETS, cupMeta, cupImg, pickModel, addCup, cupShow, focusHero, holdScreen, releaseLock, setAmbience, alertUser, toast, openSheet, closeSheet } from '../state.js';
+import { S, UI, L, save, cmp, findTask, archiveFocus, CUP_ASSETS, cupMeta, cupImg, pickModel, addCup, cupShow, v60CarafeSVG, holdScreen, releaseLock, setAmbience, alertUser, toast, openSheet, closeSheet } from '../state.js';
 import { render, go } from '../app.js';
 
 /* ---------- foco: motor baseado em timestamps ---------- */
@@ -74,17 +74,7 @@ export function interruptLine(){
 
 /* ---------- FOCO & RITUAL V60 ANIMADO ---------- */
 export function v60PourSVG(){
-  return '<svg class="v60-filter-only" viewBox="0 0 160 92" aria-hidden="true">'+
-    /* coador V60 cerâmica limpo */
-    '<path d="M42 12h76L94 60H66z" fill="var(--surface)" stroke="var(--sea)" stroke-width="3.5" stroke-linejoin="round"/>'+
-    '<path d="M118 20h10a8 8 0 0 1 0 16h-15" fill="none" stroke="var(--sea)" stroke-width="3.5" stroke-linecap="round"/>'+
-    '<line x1="62" y1="24" x2="72" y2="54" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/>'+
-    '<line x1="98" y1="24" x2="88" y2="54" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/>'+
-    '<rect x="54" y="60" width="52" height="5" rx="2.5" fill="var(--sea)"/>'+
-    /* gotas de café caindo para a xícara real abaixo */
-    '<circle class="v60-drop1" cx="80" cy="70" r="3" fill="#4A2C18"/>'+
-    '<circle class="v60-drop2" cx="80" cy="70" r="2.6" fill="#4A2C18"/>'+
-  '</svg>';
+  return '<div class="forest-stage">'+v60CarafeSVG(true)+'</div>';
 }
 
 export function previewStageHTML(compact){
@@ -93,7 +83,7 @@ export function previewStageHTML(compact){
   if(cm!==null){
     return '<div class="'+cls+'">'+cupImg({ok:true,model:cm,id:''},'hero-img',false)+'</div>';
   }
-  return '<div class="'+cls+'"><img class="hero-img" src="assets/focus/v60.webp" alt="" aria-hidden="true"></div>';
+  return '<div class="'+cls+'">'+v60CarafeSVG(false)+'</div>';
 }
 export function cupPickerHTML(){
   var cur=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:null;
@@ -167,9 +157,9 @@ export function pickTip(cfg){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 export function openRitual(cfg){
-  if(S.focus&&S.focus.mode==='focus'){toast('Já existe um foco em andamento.');go(S.tab==='hoje'?'hoje':'foco');return}
+  if(S.focus&&S.focus.mode==='focus'){toast('Já existe um foco em andamento.');go('foco');return}
   archiveFocus();
-  cfg.kind=cfg.kind==='parcial'?'parcial':'total';UI.pre={step:'ritual',cfg:cfg,tip:pickTip(cfg)};go(S.tab==='hoje'?'hoje':'foco');
+  cfg.kind=cfg.kind==='parcial'?'parcial':'total';UI.pre={step:'ritual',cfg:cfg,tip:pickTip(cfg)};go('foco');
 }
 export function beginFocus(){
   if(!UI.pre)return;var c=UI.pre.cfg;
@@ -183,7 +173,7 @@ export function startFocus(mins,opts){
   var tot=Math.max(1,Math.round(mins*60));
   S.focus={mode:'focus',kind:opts.kind==='parcial'?'parcial':'total',src:opts.src||'manual',blockId:opts.blockId||'',blockDay:opts.blockDay||'',ext:opts.ext||'',taskId:t?t.id:'',label:opts.label||(t?t.text:(custom||'Foco livre')),total:tot,startTime:Date.now(),endTime:Date.now()+tot*1000,model:pickModel(),starter:!!opts.starter,test:mins<1,cat:(opts.cat!==undefined?opts.cat:(opts.taskId!==undefined?(t&&t.cat)||'':effCat()))||'Sem categoria'};
   UI.giveUp=false;UI.pre=null;clearTimeout(UI.preTimer);
-  holdScreen();save();go(S.tab==='hoje'?'hoje':'foco');
+  holdScreen();save();go('foco');
 }
 export function durHTML(){
   var m=S.draft.mins;
@@ -205,18 +195,16 @@ export function partialDone(f,task){
 }
 export function renderPreHTML(){
   var p=UI.pre,c=p.cfg;
-  var cm=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:0;
   if(p.step==='v60'){
-    return '<div class="prep" style="text-align:center">'+
+    return '<div class="prep" style="text-align:center;padding-top:16px">'+
       v60PourSVG()+
-      '<div class="cup-prep-stage">'+cupImg({ok:true,model:cm,id:''},'cup-prep-img',false)+'</div>'+
       '<h2>Passando o café...</h2>'+
-      '<p class="muted small" style="margin-top:4px">Respire fundo. Sua xícara já vai começar.</p>'+
+      '<p class="muted small" style="margin-top:4px">Infusão lenta na jarra. Respire fundo.</p>'+
       '<div class="bar-track" style="margin-top:14px"><div class="bar-fill"></div></div>'+
       '<div class="stack" style="margin-top:14px"><button class="btn quiet block" data-act="pre-skip">Pular e começar</button></div>'+
     '</div>';
   }
-  return '<div style="text-align:center">'+previewStageHTML(true)+'<h2>Vamos preparar o café.</h2></div>'+
+  return '<div style="text-align:center;padding-top:8px"><div class="forest-stage compact">'+v60CarafeSVG(false)+'</div><h2>Vamos preparar o café.</h2></div>'+
     '<div class="ritual" style="margin-top:12px;padding:12px 14px"><p class="small"><b>'+esc(c.label)+'</b> · '+(c.mins<1?'10 s (teste)':fmtDur(c.mins))+' ('+(c.kind==='parcial'?'foco parcial':'foco total')+')</p></div>'+
     '<p class="tip-line" style="margin-top:12px;font-size:17px">'+esc(p.tip)+'</p>'+
     (c.gcal?'<p class="small muted" style="margin-top:8px">Compromisso do Google Agenda: começa como foco parcial.</p>':'')+
@@ -251,11 +239,16 @@ export function activeFocusHTML(){
     var gu=UI.giveUp?'<button class="btn quiet block danger" data-act="stop-focus">Tenho certeza: quebrar a xícara</button>':'<button class="btn quiet block" data-act="give-up">Desistir</button>';
     var btns=f.kind==='parcial'?(paused?'<div class="stack"><button class="btn block" data-act="resume">Retomar</button><button class="btn quiet block" data-act="end-partial">Encerrar foco</button></div>':'<div class="stack"><button class="btn sun block" data-act="to-urge">A vontade bateu</button><button class="btn quiet block" data-act="pause">Pausar</button><button class="btn quiet block" data-act="end-partial">Encerrar foco</button></div>'):(paused?'<div class="stack"><button class="btn block" data-act="resume">Retomar o foco</button>'+gu+'</div>':'<div class="stack"><button class="btn sun block" data-act="to-urge">A vontade bateu</button><button class="btn quiet block" data-act="pause">Pausa de emergência</button>'+gu+'</div>');
     var sim=(S.testMode&&!paused&&f.kind!=='parcial')?'<div class="row"><button class="btn quiet small" data-act="sim-away" data-v="10">Simular 10 s fora</button><button class="btn quiet small" data-act="sim-away" data-v="30">Simular 30 s fora</button><button class="btn quiet small" data-act="sim-away" data-v="120">Simular 2 min fora</button></div>':'';
-    var stage=f.model!=null?'<div class="forest-stage">'+cupImg({ok:true,model:f.model,id:''},'hero-img',false)+'</div>':focusHero();
-    return stage+'<h2>'+esc(f.label)+'</h2><p class="muted">'+esc(f.cat||'')+' · Xícara '+esc(cupMeta(f.model||0).name)+(f.kind==='parcial'?' · foco parcial':' · foco total')+'</p>'+(paused?(f.kind==='parcial'?'<div class="nudge small">Em pausa. O tempo está parado e você pode retomar quando quiser.</div>':'<div class="nudge small">Pausa de emergência: o tempo está parado (máximo de 10 minutos).</div>'):'')+
-      '<div class="bigtime" id="focusTime">'+mmss(rem)+'</div><div class="bar-track"><div class="bar-fill" id="focusBar"></div></div>'+
+    return '<div class="focus-immersive">'+
+      '<p class="muted small" style="text-transform:uppercase;letter-spacing:.06em;font-weight:700">'+esc(f.cat||'Foco')+(f.kind==='parcial'?' · Parcial':' · Foco Total')+'</p>'+
+      '<h2 style="margin-top:6px">'+esc(f.label)+'</h2>'+
+      (paused?(f.kind==='parcial'?'<div class="nudge small" style="margin-top:12px">Em pausa. O tempo está parado.</div>':'<div class="nudge small" style="margin-top:12px">Pausa de emergência (máx. 10 min).</div>'):'')+
+      '<div class="bigtime" id="focusTime" style="margin-top:24px">'+mmss(rem)+'</div>'+
+      '<div class="bar-track" style="max-width:280px;margin:14px auto 0"><div class="bar-fill" id="focusBar"></div></div>'+
       (paused?'':ambienceHTML())+
-      (paused?'':(f.kind==='parcial'?'<p class="lead">Foco flexível: pode sair do app, pausar e encerrar quando precisar. Nada quebra.</p>':'<p class="lead">Pode bloquear a tela. Ao voltar, o Brewer pergunta o que aconteceu.</p>'))+btns+sim;
+      (paused?'':'<p class="muted small" style="margin-top:16px">'+(f.kind==='parcial'?'Modo flexível: sair não quebra a xícara.':'Pode bloquear a tela. Sair para outro app interrompe o foco.')+'</p>')+
+      '<div style="margin-top:22px">'+btns+sim+'</div>'+
+    '</div>';
   }
   if(f.mode==='done'){
     var task=f.taskId?findTask(f.taskId):null;

@@ -216,15 +216,55 @@ export function cupFallback(color,broken){
   var c=broken?'#8d877f':color;
   return '<svg viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true"><ellipse cx="100" cy="168" rx="72" ry="14" fill="rgba(0,0,0,.3)"/><path d="M148 92h10a16 16 0 0 1 0 32h-14" fill="none" stroke="'+c+'" stroke-width="9"/><path d="M42 78h112v26a52 38 0 0 1-52 44h-8a52 38 0 0 1-52-44z" fill="'+c+'"/><ellipse cx="98" cy="78" rx="56" ry="11" fill="'+(broken?'#a39d94':'#3a2416')+'"/>'+(broken?'<path d="M96 82l-6 22 9 14-7 24" fill="none" stroke="#2a2622" stroke-width="3"/>':'')+'</svg>';
 }
-export function heroFallbackHTML(){
-  return '<svg viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true"><path d="M30 52h140l-46 74H76z" fill="#f6f0e4" stroke="#c8baa0" stroke-width="2"/><rect x="70" y="132" width="60" height="46" rx="8" fill="#52341f"/></svg>';
+export function v60CarafeSVG(anim){
+  return '<svg class="v60-carafe'+(anim?' is-anim':'')+'" viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true">'+
+    /* sombra da base */
+    '<ellipse cx="100" cy="184" rx="54" ry="7" fill="rgba(42,29,20,.14)"/>'+
+    /* vapor suave ou bico de ganso quando animando */
+    (anim
+      ?'<path d="M166 8c-20 0-32 7-45 14l-15 6" fill="none" stroke="#3A2416" stroke-width="4.5" stroke-linecap="round"/>'+
+       '<line class="v60-stream" x1="103" y1="28" x2="100" y2="48" stroke="#C98A24" stroke-width="3" stroke-linecap="round"/>'+
+       '<path class="v60-steam1" d="M82 36c-3-6 3-11 0-17" fill="none" stroke="#9A8470" stroke-width="1.8" stroke-linecap="round" opacity=".55"/>'
+      :'<path class="v60-steam1" d="M88 38c-3-6 3-12 0-18" fill="none" stroke="#9A8470" stroke-width="1.8" stroke-linecap="round" opacity=".45"/>'+
+       '<path class="v60-steam2" d="M112 36c-3-6 3-12 0-18" fill="none" stroke="#9A8470" stroke-width="1.8" stroke-linecap="round" opacity=".45"/>')+
+    /* filtro V60 plissado (estilo clean original que o usuário curtiu) */
+    '<path d="M44 46h112l-38 60H82z" fill="#FBF6EC" stroke="#D5C4AC" stroke-width="2" stroke-linejoin="round"/>'+
+    '<ellipse cx="100" cy="46" rx="56" ry="5.5" fill="#FBF6EC" stroke="#D5C4AC" stroke-width="2"/>'+
+    '<ellipse cx="100" cy="46" rx="48" ry="3.6" fill="#5C3A21"/>'+
+    /* dobras plissadas do papel do filtro */
+    '<line x1="56" y1="50" x2="86" y2="105" stroke="#E2D4C0" stroke-width="1.4"/>'+
+    '<line x1="68" y1="51" x2="90" y2="105" stroke="#E2D4C0" stroke-width="1.4"/>'+
+    '<line x1="82" y1="52" x2="94" y2="105" stroke="#E2D4C0" stroke-width="1.4"/>'+
+    '<line x1="96" y1="52" x2="99" y2="105" stroke="#E2D4C0" stroke-width="1.4"/>'+
+    '<line x1="110" y1="52" x2="103" y2="105" stroke="#E2D4C0" stroke-width="1.4"/>'+
+    '<line x1="124" y1="51" x2="108" y2="105" stroke="#E2D4C0" stroke-width="1.4"/>'+
+    '<line x1="138" y1="50" x2="112" y2="105" stroke="#E2D4C0" stroke-width="1.4"/>'+
+    /* anel de madeira/cerâmica (suporte do V60 sobre a jarra) */
+    '<rect x="72" y="104" width="56" height="6" rx="3" fill="#7B4F2E"/>'+
+    /* alça da jarra de vidro (lado direito) */
+    '<path d="M126 115h14a10 10 0 0 1 9 12l-5 30a10 10 0 0 1-10 8h-8" fill="none" stroke="#8C6E54" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'+
+    /* corpo da jarrinha de vidro (formato cônico/arredondado estilo Hario Server) */
+    '<path d="M74 110 L68 113 L73 118 L54 156 Q49 176 68 178 L132 178 Q151 176 146 156 L127 110 Z" fill="rgba(255,251,244,.65)" stroke="#C8B69E" stroke-width="2.2" stroke-linejoin="round"/>'+
+    /* gotas caindo dentro da jarra */
+    (anim
+      ?'<circle class="v60-drop1" cx="100" cy="116" r="3" fill="#5C3A21"/>'+
+       '<circle class="v60-drop2" cx="100" cy="116" r="2.5" fill="#5C3A21"/>'
+      :'<circle cx="100" cy="121" r="2.6" fill="#5C3A21"/>')+
+    /* café passado no fundo arredondado da jarra */
+    '<path d="M60 148 Q100 151 140 148 L143 158 Q147 174 130 175 L70 175 Q53 174 57 158 Z" fill="#5C3A21"/>'+
+    /* brilho sutil do vidro e marcações de ml */
+    '<path d="M75 120 L63 154" fill="none" stroke="rgba(255,255,255,.75)" stroke-width="2.2" stroke-linecap="round"/>'+
+    '<line x1="116" y1="136" x2="123" y2="136" stroke="#C8B69E" stroke-width="1.5" stroke-linecap="round"/>'+
+    '<line x1="119" y1="146" x2="126" y2="146" stroke="#C8B69E" stroke-width="1.5" stroke-linecap="round"/>'+
+  '</svg>';
 }
+export function heroFallbackHTML(){return v60CarafeSVG(false)}
 export function chunk(a){var r=[];for(var i=0;i<a.length;i+=7)r.push(a.slice(i,i+7));return r}
 export function cupShow(f){
   var c=f&&f.cupId?S.cups.find(function(x){return x.id===f.cupId}):null;
   return c?'<div class="cup-show'+(c.ok?'':' broke')+'">'+cupImg(c,'cup-hero',false)+'</div>':'';
 }
-export function focusHero(){return '<div class="hero"><img class="hero-img" src="'+FOCUS_ASSETS.hero+'" alt="" aria-hidden="true"></div>'}
+export function focusHero(){return '<div class="hero">'+v60CarafeSVG(false)+'</div>'}
 export function cupCard(){
   var ch=chunk(S.cups),last=ch[ch.length-1]||[],dots='';
   for(var i=0;i<7;i++){var b=last[i];dots+='<span class="bd'+(b?(b.ok?' ok':' bad'):'')+'"></span>'}

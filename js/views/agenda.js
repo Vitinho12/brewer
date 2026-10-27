@@ -112,7 +112,11 @@ export function routineSheet(id){
 /* ---------- AGENDA ---------- */
 export function renderAgenda(){
   var el=$('#tab-agenda');
-  var head='<h1>Agenda</h1>'+seg('ag-view',UI.agView,[['dia','Dia'],['rotinas','Rotinas']]);
+  var head='<h1>Agenda</h1>'+seg('ag-view',UI.agView,[['dia','Dia'],['rotinas','Rotinas'],['gcal','Google Agenda']]);
+  if(UI.agView==='gcal'){
+    el.innerHTML=head+gcalPanelHTML();
+    return;
+  }
   if(UI.agView==='rotinas'){
     var list=S.routines.length?'<ul style="margin-top:22px">'+S.routines.map(function(r){
       return '<li class="rl"><div><b>'+esc(r.name)+'</b><p class="muted small">'+r.time+', '+(r.dur||30)+' min, '+daysText(r.days)+'</p><p class="muted small">'+pl(r.steps.length,'passo','passos')+'</p></div><button class="ghost" data-act="r-edit" data-id="'+r.id+'">Editar</button></li>';
@@ -131,11 +135,10 @@ export function renderAgenda(){
       '<div class="acts">'+(i.allDay?'':'<button class="ghost" data-act="focus-block" data-k="'+k+'" data-id="'+i.id+'">Focar</button>')+(i.source==='gcal'?'':'<button class="x" data-act="block-del" data-k="'+k+'" data-id="'+i.id+'" aria-label="Remover '+esc(i.title)+'">&times;</button>')+'</div></div></li>';
   }).join('');
   var label=(isT?'Hoje, ':'')+fmtLong(k);
-  var body=items.length?'<ul class="tlist" style="margin-top:18px;border-top:1px solid var(--line)">'+rows+'</ul>':'<p class="lead" style="margin-top:22px">Nada marcado para este dia. Toque em &ldquo;Montar meu dia&rdquo; e eu sugiro o que cabe nos horários livres.</p>';
+  var body=items.length?'<ul class="tlist" style="margin-top:18px;border-top:1px solid var(--line)">'+rows+'</ul>':'<p class="lead" style="margin-top:16px">Nada marcado para este dia. Toque em &ldquo;Montar meu dia&rdquo; para encaixar tarefas nos horários livres.</p>';
   el.innerHTML=head+
     '<div class="daynav"><button class="navb" data-act="day-prev" aria-label="Dia anterior">&lsaquo;</button><div class="daylabel">'+esc(cap(label))+'</div><button class="navb" data-act="day-next" aria-label="Próximo dia">&rsaquo;</button></div>'+
     (isT?'':'<p style="text-align:center;margin-top:6px"><button class="ghost" data-act="day-today">Voltar para hoje</button></p>')+
     body+gcalHint(k)+
-    '<div class="stack"><button class="btn block" data-act="auto-plan-k">Montar meu dia</button><button class="btn quiet block" data-act="block-new">Novo bloco</button></div>'+
-    gcalPanelHTML();
+    '<div class="stack"><button class="btn block" data-act="auto-plan-k">Montar meu dia</button><button class="btn quiet block" data-act="block-new">Novo bloco</button></div>';
 }

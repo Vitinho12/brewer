@@ -1,7 +1,7 @@
 import { $, mmss, uid, today, addDays, toMin, nowMin, fmtShort, mondayOf } from './utils.js';
 import { S, UI, SH, resetState, save, L, cmp, findTask, normTask, setDone, planned, setPlan, archiveFocus, currentGoal, updateTheme, screenStatusHTML, CUP_ASSETS, cupMeta, addCup, cupFallback, heroFallbackHTML, holdScreen, releaseLock, setAmbience, alertUser, toast, closeSheet } from './state.js';
 import { gcCfg, gcResetToken, gcRun, gcDiag, gcDisconnect, mdSync, mdFile, confirmInbox, ignoreInbox } from './sync.js';
-import { renderHoje } from './views/hoje.js';
+import { renderHoje, prioSheet } from './views/hoje.js';
 import { suggestionsFor, placeSuggestion, plannerSheet, blockSheet, PRESETS, dayChips, routineSheet, renderAgenda } from './views/agenda.js';
 import { prioChips, applyPhrase, startVoice, readForm, taskSheet, inboxSheet, renderTarefas } from './views/tarefas.js';
 import { AWAY_ASK_MS, breakFocus, completeFocus, endPartial, checkReturn, answerReturn, pauseFocus, resumeFocus, effCat, effTaskId, openRitual, beginFocus, startFocus, updateDur, setKindUI, renderFoco } from './views/foco.js';
@@ -46,8 +46,8 @@ export function render(){
 }
 export function renderRun(){
   var f=S.focus,el=$('#runpill');
-  if(f&&f.mode==='focus'&&S.tab!=='foco'&&S.tab!=='hoje'){
-    el.innerHTML='<button data-act="tab" data-tab="hoje">Foco em andamento: <b id="runTime">'+mmss(f.endTime-Date.now())+'</b></button>';
+  if(f&&f.mode==='focus'&&S.tab!=='foco'){
+    el.innerHTML='<button data-act="tab" data-tab="foco">Foco em andamento: <b id="runTime">'+mmss(f.endTime-Date.now())+'</b></button>';
   }else el.innerHTML='';
 }
 
@@ -67,8 +67,8 @@ document.addEventListener('error',function(e){
 var lastTick=Date.now();
 export function updateLive(){
   var now=Date.now(),f=S.focus,s=S.wait,title='Brewer';
-  var gateLocked=!!(S.tab==='vontade'&&s&&s.phase==='gate'&&now<s.end);
-  document.body.classList[gateLocked?'add':'remove']('gate-lock');
+  var navLocked=!!((S.tab==='vontade'&&s&&s.phase==='gate'&&now<s.end)||(S.tab==='foco'&&(UI.pre||(f&&f.mode==='focus'))));
+  document.body.classList[navLocked?'add':'remove']('gate-lock');
   if(f&&(f.mode==='focus'||f.mode==='break')){
     var rem=f.pausedAt?f.endTime-f.pausedAt:f.endTime-now;
     var ft=$('#focusTime');if(ft)ft.textContent=mmss(rem);
@@ -133,8 +133,11 @@ document.addEventListener('click',function(e){
   var a=el.dataset.act,id=el.dataset.id,t,k;
   switch(a){
     case 'tab':go(el.dataset.tab);break;
+    case 'prio-sheet':prioSheet();break;
     case 'toggle':t=findTask(id);if(t){setDone(t,!t.done);save();render()}break;
+    case 'toggle-sh':t=findTask(id);if(t){setDone(t,!t.done);save();prioSheet();render()}break;
     case 'plan':t=findTask(id);if(t){if(setPlan(t,t.plan!==today())){save();render()}}break;
+    case 'plan-sh':t=findTask(id);if(t){if(setPlan(t,t.plan!==today())){save();prioSheet();render()}}break;
     case 'pick':UI.pick=!UI.pick;render();break;
     case 'task-new':taskSheet('',false);break;
     case 'task-new-today':taskSheet('',true,'pessoal');break;
@@ -182,7 +185,7 @@ document.addEventListener('click',function(e){
     case 'md-sync':mdSync();break;
     case 'cup-pick':S.draft.cupModel=el.dataset.v===''?null:+el.dataset.v;save();render();break;
     case 'amb-set':setAmbience(el.dataset.v);render();break;
-    case 'focus-task':S.draft.taskId=id;S.draft.cat='';save();go('hoje');break;
+    case 'focus-task':closeSheet();S.draft.taskId=id;S.draft.cat='';save();go('hoje');break;
     case 'dur-minus':S.draft.mins=Math.max(5,(S.draft.mins<5?5:Math.round(S.draft.mins/5)*5)-5);save();updateDur();break;
     case 'dur-plus':S.draft.mins=Math.min(720,(S.draft.mins<5?0:Math.round(S.draft.mins/5)*5)+5);save();updateDur();break;
     case 'dur-test':S.draft.mins=0.1667;save();updateDur();break;
@@ -193,7 +196,7 @@ document.addEventListener('click',function(e){
     case 'pre-kind':if(UI.pre){UI.pre.cfg.kind=el.dataset.v==='parcial'?'parcial':'total';render()}break;
     case 'pre-go':if(UI.pre){UI.pre.step='v60';clearTimeout(UI.preTimer);UI.preTimer=setTimeout(beginFocus,2400);render()}break;
     case 'pre-skip':clearTimeout(UI.preTimer);beginFocus();break;
-    case 'pre-back':clearTimeout(UI.preTimer);UI.pre=null;render();break;
+    case 'pre-back':clearTimeout(UI.preTimer);UI.pre=null;go('hoje');break;
     case 'end-partial':endPartial();break;
     case 'sg-place':var sp=UI.sg[+el.dataset.i];if(sp){placeSuggestion(UI.sgDay,sp);toast('Colocado na agenda.');render();plannerSheet(UI.sgDay)}break;
     case 'sg-no':var sn=UI.sg[+el.dataset.i];if(sn){UI.dismissed[UI.sgDay+'|'+sn.task.id]=true;plannerSheet(UI.sgDay)}break;
@@ -221,7 +224,7 @@ document.addEventListener('click',function(e){
       save();render();break;
     case 'more-block':startFocus(25,{taskId:S.focus?S.focus.taskId:'',label:S.focus?S.focus.label:''});break;
     case 'start-break':S.focus={mode:'break',taskId:'',label:'Pausa',total:300,startTime:Date.now(),endTime:Date.now()+300000,starter:false};save();render();break;
-    case 'skip-break':S.focus=null;save();render();break;
+    case 'skip-break':S.focus=null;save();go('hoje');break;
     case 'feel':selectFeel(el.dataset.v);break;
     case 'start-10m':start10m();break;
     case 'gate-stay':gateStay();break;

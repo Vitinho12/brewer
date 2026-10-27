@@ -228,41 +228,46 @@ body[data-theme="9"]{--bg:#181210;--surface:#251D19;--ink:#F4EADD;--muted:#BBA89
 .ios-hint{margin:22px 0 6px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:14px;color:var(--muted);font-size:13px}
 
 /* estação de foco estilo Forest no Hoje e ritual V60 limpo */
-.hoje-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hoje-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .hoje-top .mark{margin-bottom:0;font-size:16px}
-.phase-badge.sm{padding:6px 12px;font-size:13px;min-height:36px}
-.nudge-bar{margin-top:10px;padding:10px 14px;border-radius:16px;background:var(--sea-soft);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px}
-.forest-card{margin-top:12px;padding:16px 16px 18px;border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 24px rgba(42,29,20,.05)}
+.top-pills{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.phase-badge.sm{padding:5px 11px;font-size:12px;min-height:34px}
+.nudge-bar{margin-top:8px;padding:8px 12px;border-radius:14px;background:var(--sea-soft);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
+.smart-card{margin-top:10px;padding:11px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.smart-info{min-width:160px;flex:1}
+.smart-eyebrow{display:block;font-size:11px;font-weight:700;color:var(--sea);text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
+.smart-info b{font-size:14px;line-height:1.25;display:block}
+.smart-acts{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.forest-card{margin-top:10px;padding:14px 16px 16px;border-radius:24px;background:var(--surface);border:1px solid var(--line);box-shadow:0 8px 24px rgba(42,29,20,.05)}
 .forest-head{text-align:center}
-.forest-stage{position:relative;width:min(58%,190px);aspect-ratio:1;margin:0 auto 6px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,var(--sea-soft) 0%,transparent 72%)}
-.forest-stage.compact{width:min(44%,134px);margin:0 auto 4px}
-.cup-picker{display:flex;gap:6px;overflow-x:auto;padding:4px 2px;margin-top:4px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.forest-stage{position:relative;width:min(54%,176px);aspect-ratio:1;margin:0 auto 4px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,var(--sea-soft) 0%,transparent 72%)}
+.forest-stage.compact{width:min(40%,124px);margin:0 auto 2px}
+.cup-picker{display:flex;gap:6px;overflow-x:auto;padding:4px 2px;margin-top:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .cup-picker::-webkit-scrollbar{display:none}
 .cp-item{flex:none;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;border:1.5px solid var(--line);background:var(--bg);font-size:12px;font-weight:600;white-space:nowrap}
 .cp-item[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink)}
 .cp-dot{width:10px;height:10px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.15)}
-.durbox.compact{margin-top:6px}
+.durbox.compact{margin-top:4px}
 .dur-inline{display:flex;align-items:center;justify-content:center;gap:14px}
-.durbox.compact .durval{font-size:40px;line-height:1}
-.durbox.compact .durrange{margin:8px 0 2px;height:28px}
-.focus-fields{margin-top:10px;text-align:left}
-.field.field-sm{padding:9px 12px;min-height:42px;font-size:14px;border-radius:12px;margin-top:0}
+.durbox.compact .durval{font-size:38px;line-height:1}
+.durbox.compact .durrange{margin:6px 0 2px;height:26px}
+.focus-fields{margin-top:8px;text-align:left}
+.field.field-sm{padding:8px 11px;min-height:40px;font-size:14px;border-radius:12px;margin-top:0}
 .focus-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .mini-lbl{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:3px}
-.v60-filter-only{width:116px;height:68px;margin:2px auto 0;display:block}
+.v60-carafe{width:100%;height:100%;display:block}
+.v60-stream{stroke-dasharray:5 5;animation:streamflow .45s linear infinite}
 .v60-drop1{animation:dropfall 1s ease-in infinite}
 .v60-drop2{animation:dropfall 1s ease-in .5s infinite}
-.cup-prep-stage{width:128px;height:128px;margin:0 auto 8px;display:grid;place-items:center}
-.cup-prep-img{width:100%;height:100%;object-fit:contain;display:block}
-@keyframes dropfall{0%{transform:translateY(0);opacity:1}80%{opacity:1}100%{transform:translateY(16px);opacity:0}}
-.amb-bar{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:14px}
+.v60-steam1{animation:steamup 2.4s ease-in-out infinite}
+.v60-steam2{animation:steamup 2.4s ease-in-out 1s infinite}
+@keyframes streamflow{to{stroke-dashoffset:-10}}
+@keyframes dropfall{0%{transform:translateY(0);opacity:1}80%{opacity:1}100%{transform:translateY(26px);opacity:0}}
+@keyframes steamup{0%,100%{transform:translateY(0);opacity:.25}50%{transform:translateY(-5px);opacity:.65}}
+.focus-immersive{text-align:center;padding:28px 6px 10px}
+.amb-bar{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:16px}
 .amb-btn{padding:6px 13px;border-radius:999px;border:1.5px solid var(--line);background:var(--surface);font-size:13px;font-weight:600;min-height:36px}
 .amb-btn[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink)}
-.home-seg{margin-top:12px}
-.home-seg button{min-height:38px;padding:6px 10px;font-size:13px}
-.home-panel{margin-top:8px;padding:14px 16px;border-radius:20px;background:var(--surface);border:1px solid var(--line)}
-.home-panel .sec{margin-top:0;padding-top:0;border-top:0}
-.home-ag-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
 
 /* prateleira da coleção com etiquetas visuais */
 .tray{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:18px 14px 16px;margin-top:18px;box-shadow:0 6px 20px rgba(42,29,20,.05)}

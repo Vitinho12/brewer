@@ -3,7 +3,7 @@ import { $, esc, pl, uid, today, parseKey, addDays, toMin, fromMin, fmtHM, monda
 export var KEY='brewer.v1';
 
 /* ---------- estado ---------- */
-export var UI={agDay:null,agView:'dia',revView:'hoje',showDone:false,pick:false,open:{},colView:'set',giveUp:false,catRange:7,asking:false,tkKind:'pessoal',tkP:'pend',tkF:'new',mdCfg:false,mdBusy:false,mdErr:'',showIgn:false,listening:false,pre:null,preTimer:0,sg:[],sgDay:'',dismissed:{},hideSug:'',amb:'off',homeSub:'prio'};
+export var UI={agDay:null,agView:'dia',revView:'hoje',showDone:false,pick:false,open:{},colView:'mes',colOffset:0,giveUp:false,catRange:7,asking:false,tkKind:'pessoal',tkP:'pend',tkF:'new',mdCfg:false,mdBusy:false,mdErr:'',showIgn:false,listening:false,pre:null,preTimer:0,sg:[],sgDay:'',dismissed:{},hideSug:'',amb:'off',homeSub:'prio'};
 export var SH={};
 export function setSH(val){SH=val}
 
@@ -186,9 +186,22 @@ export var CUP_ASSETS={
     'assets/cups/cup-09-good.webp','assets/cups/cup-10-good.webp','assets/cups/cup-11-good.webp','assets/cups/cup-12-good.webp'],
   broken:'assets/cups/cup-broken.webp'
 };
-export var CUP_META=[{name:'Terracota',color:'#C8654B'},{name:'Azul',color:'#4A7FAE'},{name:'Mostarda',color:'#E3AE3C'},{name:'Oliva',color:'#8A9A4B'},{name:'Grafite',color:'#2E2E30'},{name:'Vinho',color:'#7A2A3E'},{name:'Céu',color:'#A9C9E4'},{name:'Esmeralda',color:'#2A8E69'},{name:'Caramelo',color:'#7A4524'},{name:'Areia',color:'#E2C7AE'},{name:'Noite',color:'#3A3C48'},{name:'Rosa',color:'#E8B4B8'}];
+export var CUP_META=[
+  {name:'Terracota',desc:'Argila artesanal',color:'#C8654B'},
+  {name:'Esmaltada',desc:'Caneca de trilha',color:'#4A7FAE'},
+  {name:'Origami',desc:'Cerâmica canelada',color:'#E3AE3C'},
+  {name:'Yunomi',desc:'Copo japonês sem alça',color:'#8A9A4B'},
+  {name:'Kintsugi',desc:'Cerâmica com ouro',color:'#2E2E30'},
+  {name:'Taça Especial',desc:'Degustação de safra',color:'#7A2A3E'},
+  {name:'Vidro Duplo',desc:'Espresso flutuante',color:'#6A9EC0'},
+  {name:'Clássica',desc:'Porcelana de cafeteria',color:'#2A8E69'},
+  {name:'Mini Chemex',desc:'Colar de madeira',color:'#8A5229'},
+  {name:'Nórdica',desc:'Bicolor escandinava',color:'#D4A373'},
+  {name:'Moka',desc:'Facetada italiana',color:'#3A3C48'},
+  {name:'Latte Art',desc:'Coração na crema',color:'#D98A94'}
+];
 export var FOCUS_ASSETS={hero:'assets/focus/v60.webp'};
-export function cupMeta(i){return CUP_META[i]||{name:'Xícara '+(i+1),color:'#9A7B5B'}}
+export function cupMeta(i){return CUP_META[i]||{name:'Xícara '+(i+1),desc:'Café especial',color:'#9A7B5B'}}
 export function cupSrc(c){
   if(c.ok)return CUP_ASSETS.good[c.model]||'';
   var b=CUP_ASSETS.broken;return Array.isArray(b)?(b[c.model]||b[0]||''):(b||'');
@@ -208,14 +221,128 @@ export function addCup(ok,f,sim){
   S.cups.push(c);if(ok&&S.unlocked.indexOf(m)<0)S.unlocked.push(m);
   return c;
 }
+/* 12 xícaras autorais no mesmo traço editorial do V60 (cada modelo tem formato próprio) */
+export function cupArtSVG(model,broken){
+  var idx=(+model||0)%12,m=cupMeta(idx),c=broken?'#8E867E':m.color;
+  if(broken){
+    return '<svg viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true">'+
+      '<ellipse cx="104" cy="170" rx="68" ry="11" fill="rgba(92,58,33,.28)"/>'+
+      '<ellipse cx="142" cy="173" rx="22" ry="5" fill="#6E472B" opacity=".55"/>'+
+      '<g transform="rotate(-6 100 130)">'+
+        '<path d="M144 96h11a14 14 0 0 1 0 28h-14" fill="none" stroke="#7D756D" stroke-width="7" stroke-linecap="round"/>'+
+        '<path d="M48 80h98v32a46 38 0 0 1-46 42h-6a46 38 0 0 1-46-42z" fill="#9A928A" stroke="#6E675F" stroke-width="2"/>'+
+        '<ellipse cx="97" cy="80" rx="49" ry="9" fill="#6E675F"/>'+
+        '<path d="M92 76l-8 24 11 14-9 28" fill="none" stroke="#2A1D14" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>'+
+        '<polygon points="122,78 134,72 138,84" fill="#8E867E" transform="translate(8,-6) rotate(18 130 78)"/>'+
+      '</g>'+
+    '</svg>';
+  }
+  var steam='<path class="v60-steam1" d="M86 50c-3-7 3-13 0-20" fill="none" stroke="#9A8470" stroke-width="2" stroke-linecap="round" opacity=".5"/>'+
+            '<path class="v60-steam2" d="M110 46c-3-7 3-13 0-20" fill="none" stroke="#9A8470" stroke-width="2" stroke-linecap="round" opacity=".5"/>';
+  var sh='<ellipse cx="100" cy="172" rx="58" ry="9" fill="rgba(42,29,20,.15)"/>';
+  var body='';
+  switch(idx){
+    case 0: /* Terracota: Caneca cilíndrica rústica com base de barro cru */
+      body='<path d="M142 94h14a13 13 0 0 1 13 13v8a13 13 0 0 1-13 13h-14" fill="none" stroke="'+c+'" stroke-width="7.5" stroke-linejoin="round"/>'+
+           '<rect x="54" y="74" width="90" height="84" rx="14" fill="'+c+'" stroke="#9E4A33" stroke-width="2"/>'+
+           '<path d="M54 140h90v6a12 12 0 0 1-12 12H66a12 12 0 0 1-12-12z" fill="#A67B5B"/>'+
+           '<ellipse cx="99" cy="74" rx="45" ry="8.5" fill="#FBF6EC" stroke="#9E4A33" stroke-width="2"/>'+
+           '<ellipse cx="99" cy="74" rx="39" ry="6" fill="#4A2C18"/>'+
+           '<path d="M66 90v42" stroke="rgba(255,255,255,.32)" stroke-width="3" stroke-linecap="round"/>';
+      break;
+    case 1: /* Esmaltada: Caneca de trilha azul com borda escura e salpicados brancos */
+      body='<path d="M144 92h13a16 16 0 0 1 0 34h-13" fill="none" stroke="#263B52" stroke-width="7" stroke-linecap="round"/>'+
+           '<path d="M52 76h92l-6 74a14 14 0 0 1-14 12H72a14 14 0 0 1-14-12z" fill="'+c+'" stroke="#325B80" stroke-width="2"/>'+
+           '<ellipse cx="98" cy="76" rx="48" ry="9" fill="#263B52"/>'+
+           '<ellipse cx="98" cy="76" rx="41" ry="6" fill="#4A2C18"/>'+
+           '<circle cx="74" cy="106" r="2" fill="#FFFBF4" opacity=".75"/><circle cx="116" cy="120" r="1.8" fill="#FFFBF4" opacity=".75"/><circle cx="88" cy="138" r="2.2" fill="#FFFBF4" opacity=".7"/><circle cx="122" cy="98" r="1.5" fill="#FFFBF4" opacity=".75"/><circle cx="70" cy="130" r="1.6" fill="#FFFBF4" opacity=".7"/>';
+      break;
+    case 2: /* Origami: Cerâmica canelada mostarda sem alça com base de madeira */
+      body='<rect x="68" y="156" width="64" height="10" rx="4" fill="#7B4F2E"/>'+
+           '<path d="M46 72h108l-22 86H68z" fill="'+c+'" stroke="#B88720" stroke-width="2" stroke-linejoin="round"/>'+
+           '<line x1="64" y1="76" x2="78" y2="156" stroke="#F5CA63" stroke-width="2"/>'+
+           '<line x1="82" y1="76" x2="89" y2="156" stroke="#B88720" stroke-width="1.6"/>'+
+           '<line x1="100" y1="76" x2="100" y2="156" stroke="#F5CA63" stroke-width="2"/>'+
+           '<line x1="118" y1="76" x2="111" y2="156" stroke="#B88720" stroke-width="1.6"/>'+
+           '<line x1="136" y1="76" x2="122" y2="156" stroke="#F5CA63" stroke-width="2"/>'+
+           '<ellipse cx="100" cy="72" rx="54" ry="8" fill="#FFFBF4" stroke="#B88720" stroke-width="2"/>'+
+           '<ellipse cx="100" cy="72" rx="46" ry="5.5" fill="#4A2C18"/>';
+      break;
+    case 3: /* Yunomi: Copo japonês oliva com faixas horizontais zen */
+      body='<path d="M72 156h56l-4 10H76z" fill="#3D352E"/>'+
+           '<path d="M58 72h84l-8 84H66z" fill="'+c+'" stroke="#687634" stroke-width="2" stroke-linejoin="round"/>'+
+           '<path d="M61 102h78M63 122h74M65 140h70" stroke="#F4EFE6" stroke-width="3" opacity=".65"/>'+
+           '<ellipse cx="100" cy="72" rx="42" ry="8" fill="#F4EFE6" stroke="#687634" stroke-width="2"/>'+
+           '<ellipse cx="100" cy="72" rx="36" ry="5.5" fill="#3E2716"/>';
+      break;
+    case 4: /* Kintsugi: Cerâmica grafite com cicatriz de ouro e pires de madeira */
+      body='<ellipse cx="100" cy="162" rx="64" ry="8" fill="#8C5E3C"/>'+
+           '<path d="M142 94h12a14 14 0 0 1 0 28h-15" fill="none" stroke="'+c+'" stroke-width="7"/>'+
+           '<path d="M48 80h100v26a48 40 0 0 1-48 48h-4a48 40 0 0 1-48-48z" fill="'+c+'" stroke="#1A1A1C" stroke-width="2"/>'+
+           '<path d="M88 84l8 22-10 18 14 26M96 106l18 8" fill="none" stroke="#E8B94F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>'+
+           '<ellipse cx="98" cy="80" rx="50" ry="9" fill="#4A4A4E"/>'+
+           '<ellipse cx="98" cy="80" rx="43" ry="6" fill="#4A2C18"/>';
+      break;
+    case 5: /* Taça Especial: Formato tulipa vinho com haste curta */
+      body='<ellipse cx="100" cy="166" rx="36" ry="6" fill="'+c+'"/>'+
+           '<rect x="94" y="140" width="12" height="26" rx="4" fill="'+c+'"/>'+
+           '<path d="M54 70h92c4 36-14 72-46 72S50 106 54 70z" fill="'+c+'" stroke="#561B2A" stroke-width="2"/>'+
+           '<ellipse cx="100" cy="70" rx="46" ry="8" fill="#FBF6EC" stroke="#561B2A" stroke-width="2"/>'+
+           '<ellipse cx="100" cy="70" rx="40" ry="5.5" fill="#4A2C18"/>'+
+           '<path d="M68 86q-2 26 14 42" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="3" stroke-linecap="round"/>';
+      break;
+    case 6: /* Vidro Duplo: Copo translúcido com café e crema flutuando */
+      body='<rect x="56" y="68" width="88" height="96" rx="22" fill="rgba(210,232,248,.45)" stroke="#7BA7C7" stroke-width="2.5"/>'+
+           '<path d="M68 84h64v44a32 32 0 0 1-64 0z" fill="#4A2C18"/>'+
+           '<rect x="68" y="80" width="64" height="12" rx="4" fill="#C98A24"/>'+
+           '<ellipse cx="100" cy="68" rx="44" ry="7" fill="rgba(255,255,255,.65)" stroke="#7BA7C7" stroke-width="2"/>'+
+           '<path d="M64 84v54" stroke="rgba(255,255,255,.8)" stroke-width="3" stroke-linecap="round"/>';
+      break;
+    case 7: /* Clássica: Xícara de cafeteria esmeralda com pires e faixa creme */
+      body='<ellipse cx="98" cy="160" rx="68" ry="9" fill="'+c+'" stroke="#1D684C" stroke-width="2"/>'+
+           '<path d="M144 92h13a15 15 0 0 1 0 30h-16" fill="none" stroke="'+c+'" stroke-width="8"/>'+
+           '<path d="M44 80h106v24a51 42 0 0 1-51 48h-4a51 42 0 0 1-51-48z" fill="'+c+'" stroke="#1D684C" stroke-width="2"/>'+
+           '<path d="M46 96h102" stroke="#FBF6EC" stroke-width="5" opacity=".85"/>'+
+           '<ellipse cx="97" cy="80" rx="53" ry="9" fill="#FBF6EC" stroke="#1D684C" stroke-width="2"/>'+
+           '<ellipse cx="97" cy="80" rx="46" ry="6" fill="#4A2C18"/>';
+      break;
+    case 8: /* Mini Chemex: Ampulheta de vidro com colar de madeira e laço */
+      body='<path d="M58 64h84l-26 44 28 52a8 8 0 0 1-7 12H63a8 8 0 0 1-7-12l28-52z" fill="rgba(255,251,244,.75)" stroke="#C8B69E" stroke-width="2.2" stroke-linejoin="round"/>'+
+           '<path d="M64 138h72l8 16a6 6 0 0 1-5 9H61a6 6 0 0 1-5-9z" fill="#4A2C18"/>'+
+           '<path d="M74 96h52l-6 24H80z" fill="#C89D66" stroke="#8A5229" stroke-width="2" stroke-linejoin="round"/>'+
+           '<line x1="72" y1="108" x2="128" y2="108" stroke="#5C3A21" stroke-width="3.5"/>'+
+           '<circle cx="100" cy="108" r="4.5" fill="#5C3A21"/>'+
+           '<path d="M98 112l-5 14M102 112l5 14" stroke="#5C3A21" stroke-width="2.5" stroke-linecap="round"/>';
+      break;
+    case 9: /* Nórdica: Cerâmica escandinava metade creme, metade terracota areia */
+      body='<path d="M58 72h84l-6 88a12 12 0 0 1-12 11H76a12 12 0 0 1-12-11z" fill="#FFFBF4" stroke="#C4A482" stroke-width="2"/>'+
+           '<path d="M61 120q39-8 78 0l-3 40a12 12 0 0 1-12 11H76a12 12 0 0 1-12-11z" fill="'+c+'"/>'+
+           '<ellipse cx="100" cy="72" rx="42" ry="8" fill="#FFFBF4" stroke="#C4A482" stroke-width="2"/>'+
+           '<ellipse cx="100" cy="72" rx="36" ry="5.5" fill="#5C3A21"/>';
+      break;
+    case 10: /* Moka: Xícara octogonal facetada noturna com friso dourado */
+      body='<path d="M142 94h12a13 13 0 0 1 0 28h-14" fill="none" stroke="'+c+'" stroke-width="7"/>'+
+           '<polygon points="52,76 144,76 134,158 62,158" fill="'+c+'" stroke="#23242C" stroke-width="2" stroke-linejoin="round"/>'+
+           '<polygon points="76,76 120,76 114,158 82,158" fill="#484B5A"/>'+
+           '<line x1="53" y1="88" x2="143" y2="88" stroke="#E3AC4E" stroke-width="3"/>'+
+           '<ellipse cx="98" cy="76" rx="46" ry="8" fill="#23242C"/>'+
+           '<ellipse cx="98" cy="76" rx="40" ry="5.5" fill="#4A2C18"/>';
+      break;
+    default: /* Latte Art: Xícara rosa vintage com coração desenhado na crema */
+      body='<ellipse cx="98" cy="160" rx="64" ry="9" fill="#F4D5D8"/>'+
+           '<path d="M146 94h13a15 15 0 0 1 0 30h-16" fill="none" stroke="'+c+'" stroke-width="7.5"/>'+
+           '<path d="M44 82h108v22a52 42 0 0 1-52 48h-4a52 42 0 0 1-52-48z" fill="'+c+'" stroke="#B86B75" stroke-width="2"/>'+
+           '<ellipse cx="98" cy="82" rx="54" ry="14" fill="#6E4226" stroke="#FBF6EC" stroke-width="3"/>'+
+           '<path d="M98 88c-6-5-14-1-10 5 3 4 10 8 10 8s7-4 10-8c4-6-4-10-10-5z" fill="#FFFBF4"/>';
+      break;
+  }
+  return '<svg viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true">'+sh+steam+body+'</svg>';
+}
 export function cupImg(c,cls,act){
   var m=cupMeta(c.model);
-  return '<img src="'+esc(cupSrc(c))+'" class="'+cls+'" alt="'+esc('Xícara '+m.name+(c.ok?', inteira':', quebrada'))+'" data-model="'+c.model+'" data-ok="'+(c.ok?1:0)+'"'+(act?' data-act="cup-info" data-id="'+c.id+'"':'')+'>';
+  return '<div class="'+cls+' cup-art" role="img" aria-label="'+esc('Xícara '+m.name+(c.ok?', inteira':', quebrada'))+'" data-model="'+c.model+'" data-ok="'+(c.ok?1:0)+'"'+(act?' data-act="cup-info" data-id="'+c.id+'"':'')+'>'+cupArtSVG(c.model,!c.ok)+'</div>';
 }
-export function cupFallback(color,broken){
-  var c=broken?'#8d877f':color;
-  return '<svg viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true"><ellipse cx="100" cy="168" rx="72" ry="14" fill="rgba(0,0,0,.3)"/><path d="M148 92h10a16 16 0 0 1 0 32h-14" fill="none" stroke="'+c+'" stroke-width="9"/><path d="M42 78h112v26a52 38 0 0 1-52 44h-8a52 38 0 0 1-52-44z" fill="'+c+'"/><ellipse cx="98" cy="78" rx="56" ry="11" fill="'+(broken?'#a39d94':'#3a2416')+'"/>'+(broken?'<path d="M96 82l-6 22 9 14-7 24" fill="none" stroke="#2a2622" stroke-width="3"/>':'')+'</svg>';
-}
+export function cupFallback(color,broken){return cupArtSVG(0,broken)}
 export function v60CarafeSVG(anim){
   return '<svg class="v60-carafe'+(anim?' is-anim':'')+'" viewBox="0 0 200 200" width="100%" height="100%" aria-hidden="true">'+
     /* sombra da base */

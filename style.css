@@ -278,3 +278,61 @@ body[data-theme="9"]{--bg:#181210;--surface:#251D19;--ink:#F4EADD;--muted:#BBA89
 .cup-cell{display:flex;flex-direction:column;align-items:center;text-align:center}
 .cup-tag{margin-top:3px;font-size:11px;font-weight:600;color:var(--muted);display:inline-flex;align-items:center;gap:4px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:1px 6px;border-radius:99px;background:var(--bg);border:1px solid var(--line)}
 .cup-tag-dot{width:7px;height:7px;border-radius:50%;flex:none}
+.cup-art{display:block;width:100%;height:100%}
+.cat-item.locked .cup-art{filter:brightness(0);opacity:.16}
+
+/* Cenário 2.5D: Balcão da Cafeteria (estilo Forest) */
+.cafe-scene{margin-top:12px;border-radius:26px;overflow:hidden;border:1.5px solid #D5C1A5;background:linear-gradient(180deg,#2C1E14 0%,#3F2A1B 38%,#F6EFE4 100%);box-shadow:0 12px 28px rgba(42,29,20,.12)}
+.cafe-ceiling{position:relative;display:flex;justify-content:space-between;align-items:flex-start;padding:0 26px 10px;min-height:48px}
+.cafe-sign{margin-top:14px;padding:3px 12px;border-radius:99px;background:rgba(255,251,244,.12);border:1px solid rgba(255,251,244,.2);color:#FBF5EA;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.cafe-lamp{position:relative;display:flex;flex-direction:column;align-items:center}
+.lamp-cord{width:2px;height:14px;background:#8C6E54}
+.lamp-shade{width:28px;height:11px;border-radius:14px 14px 3px 3px;background:#C98A24;border:1.5px solid #8A5A10;z-index:2}
+.lamp-glow{position:absolute;top:18px;width:96px;height:56px;background:radial-gradient(ellipse at top,rgba(242,196,107,.38),transparent 72%);pointer-events:none}
+.cafe-stage{padding:4px 12px 14px;min-height:132px;display:flex;flex-direction:column;justify-content:flex-end;gap:10px}
+.cafe-empty{text-align:center;padding:8px 14px 6px;color:#FBF5EA}
+.cafe-empty-v60{width:92px;height:92px;margin:0 auto 4px}
+.cafe-empty p{color:rgba(255,251,244,.88);line-height:1.35}
+.cafe-shelf{position:relative;padding-top:4px}
+.cafe-shelf-cups{display:flex;justify-content:center;align-items:flex-end;gap:4px;padding:0 6px;position:relative;z-index:2}
+.cafe-wood-plank{height:14px;margin-top:-6px;border-radius:6px;background:linear-gradient(180deg,#9E6B43 0%,#784E2D 65%,#5A381E 100%);border-top:1.5px solid #B8865C;box-shadow:0 5px 10px rgba(0,0,0,.28);position:relative;z-index:1}
+.cafe-cup{background:none;border:0;padding:0;display:flex;flex-direction:column;align-items:center;width:54px;cursor:pointer;transition:transform .15s ease}
+.cafe-cup:active{transform:scale(.94)}
+.cafe-cup-art{width:50px;height:50px}
+.cafe-cup.is-broken .cafe-cup-art{opacity:.88}
+.cafe-cup-badge{margin-top:-3px;padding:1px 5px;border-radius:99px;background:rgba(42,29,20,.82);color:#FFFBF4;font-size:9px;font-weight:700;display:inline-flex;align-items:center;gap:3px;white-space:nowrap;z-index:3}
+.cafe-cup-badge i{width:5px;height:5px;border-radius:50%;display:inline-block}
+.cafe-stats{display:flex;justify-content:space-around;align-items:center;gap:8px;padding:10px 12px;background:#261910;color:#F3E9DC;font-size:12px;border-top:1px solid rgba(255,255,255,.08)}
+.cafe-stats .bad{color:#F08A78}
+
+/* Calendário Visual estilo GymRats & Visão Semana / Ano */
+.gr-card{margin-top:12px;padding:14px 12px;border-radius:22px;background:var(--surface);border:1px solid var(--line)}
+.gr-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:0 4px}
+.gr-head h3{font-size:16px}
+.gr-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.gr-dow{text-align:center;font-size:11px;font-weight:700;color:var(--muted);padding-bottom:4px}
+.gr-cell{position:relative;aspect-ratio:1/1.18;border-radius:12px;border:1px solid var(--line);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:3px 2px;overflow:hidden}
+.gr-cell.empty{background:transparent;border-color:transparent}
+.gr-cell.today{border:2px solid var(--sun)}
+.gr-cell.has-cup{background:var(--surface);border-color:#C8B69E;cursor:pointer;box-shadow:0 2px 6px rgba(42,29,20,.05)}
+.gr-cell.only-broken{background:rgba(180,65,47,.06);border-color:rgba(180,65,47,.3)}
+.gr-num{font-size:10px;font-weight:700;color:var(--muted);align-self:flex-start;padding-left:3px;line-height:1}
+.gr-cnt{position:absolute;top:2px;right:3px;font-size:9px;font-weight:700;color:var(--sea);background:var(--sea-soft);padding:0 4px;border-radius:99px}
+.gr-cup{width:76%;height:62%;margin-top:-2px}
+.gr-min{font-size:9px;font-weight:700;color:var(--ink);line-height:1}
+.wk-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.wk-col{border-radius:14px;border:1px solid var(--line);background:var(--bg);padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.wk-col.today{border:2px solid var(--sun)}
+.wk-col.has-cup{background:var(--surface);border-color:#C8B69E;cursor:pointer}
+.wk-day{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.wk-date{font-size:12px;font-weight:700}
+.wk-cup{width:36px;height:36px;display:grid;place-items:center}
+.wk-dot{width:6px;height:6px;border-radius:50%;background:var(--line)}
+.wk-min{font-size:10px;font-weight:700;color:var(--muted)}
+.yr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.yr-cell{border-radius:16px;border:1px solid var(--line);background:var(--bg);padding:8px 10px;display:flex;flex-direction:column;align-items:center;text-align:center}
+.yr-cell.active{background:var(--surface);border-color:#C8B69E}
+.yr-top{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.yr-top span{font-size:11px;font-weight:700;color:var(--sea)}
+.yr-cup{width:46px;height:46px;margin:2px 0;display:grid;place-items:center}
+.yr-min{font-size:11px;font-weight:600;color:var(--muted)}

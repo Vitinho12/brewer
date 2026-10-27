@@ -1,5 +1,5 @@
 /* Brewer: cache offline. Troque o número da versão sempre que alterar arquivos publicados. */
-const CACHE = 'brewer-v8';
+const CACHE = 'brewer-v9';
 const APP_SHELL = [
   './',
   './index.html',
@@ -20,7 +20,9 @@ const APP_SHELL = [
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './assets/focus/v60.webp'
+  './assets/focus/v60.webp',
+  './assets/audio/rain.mp3',
+  './assets/audio/cafe.mp3'
 ];
 for (let i = 1; i <= 12; i++) APP_SHELL.push(`./assets/cups/cup-${String(i).padStart(2, '0')}-good.webp`);
 APP_SHELL.push('./assets/cups/cup-broken.webp');

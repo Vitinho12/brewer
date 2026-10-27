@@ -28,7 +28,7 @@ export function checkGateParam(){
 }
 export function go(tab){
   var f=S.focus;
-  if(f&&f.mode==='failed'&&((['foco','hoje'].indexOf(S.tab)>-1&&['foco','hoje'].indexOf(tab)<0)||(['foco','hoje'].indexOf(S.tab)<0&&['foco','hoje'].indexOf(tab)>-1)))archiveFocus();
+  if(f&&f.mode==='failed')archiveFocus();
   if(tab==='vontade'&&(!S.wait||S.wait.phase==='result'||(S.wait.phase==='gate'&&Date.now()>=S.wait.end)))startGate('Instagram');
   else if(tab!=='vontade'&&S.wait&&S.wait.phase==='gate')S.wait=null;
   S.tab=tab;save();render();
@@ -107,7 +107,9 @@ setInterval(function(){
   if(ch){save();render()}else updateLive();
 },250);
 function markAway(){
-  var f=S.focus;if(f&&f.mode==='focus'&&f.kind!=='parcial'&&!f.pausedAt&&!f.hiddenAt){f.hiddenAt=Date.now();save()}
+  var f=S.focus;
+  if(f&&f.mode==='focus'&&f.kind!=='parcial'&&!f.pausedAt&&!f.hiddenAt){f.hiddenAt=Date.now();save()}
+  else if(f&&f.mode==='failed'){archiveFocus();save()}
   /* se saiu do Brewer enquanto estava na tela da barreira, reseta para que a próxima vinda do atalho reinicie o cronômetro */
   if(S.tab==='vontade'&&S.wait&&S.wait.phase==='gate'){S.wait=null;save()}
 }
@@ -117,7 +119,7 @@ document.addEventListener('visibilitychange',function(){
   if(checkGateParam()){render();return}
   if(S.tab==='vontade'&&(!S.wait||S.wait.phase==='gate')){startGate('Instagram');render();return}
   if((f&&f.mode==='focus'&&!f.pausedAt)||(S.wait&&(S.wait.phase==='wait'||S.wait.phase==='gate')))holdScreen();
-  checkReturn();updateLive();
+  render();checkReturn();updateLive();
 });
 window.addEventListener('pagehide',markAway);
 window.addEventListener('pageshow',function(){if(checkGateParam())render();checkReturn()});
@@ -289,6 +291,7 @@ document.addEventListener('click',function(e){
     case 'r-del':S.routines=S.routines.filter(function(x){return x.id!==id});save();closeSheet();render();break;
     /* revisão */
     case 'rev-view':UI.revView=el.dataset.v;render();break;
+    case 'home-sub':UI.homeSub=el.dataset.v;render();break;
     /* jogo */
     case 'cat':S.draft.cat=el.dataset.v;save();render();break;
     case 'cat-new':var cn=(prompt('Nome da nova categoria:')||'').trim();if(cn){if(S.cats.indexOf(cn)<0)S.cats.push(cn);S.draft.cat=cn;save();render()}break;
@@ -319,6 +322,14 @@ document.addEventListener('keydown',function(e){
 document.addEventListener('change',function(e){
   var t=e.target;if(!t)return;
   if(t.id==='taskSel'){S.draft.taskId=t.value;S.draft.cat='';save();render();return}
+  if(t.id==='catSel'){
+    if(t.value==='__new'){
+      var cn=(prompt('Nome da nova categoria:')||'').trim();
+      if(cn){if(S.cats.indexOf(cn)<0)S.cats.push(cn);S.draft.cat=cn}
+    }else S.draft.cat=t.value;
+    save();render();return;
+  }
+  if(t.id==='kindSel'){S.draft.kind=t.value==='parcial'?'parcial':'total';save();return}
   if(t.id==='fAwake'){S.keepAwake=t.checked;save();return}
   if(t.id==='durRange'){save();return}
   if(t.id==='gcMoodle'){gcCfg().moodleCals=t.value.split(',').map(function(x){return x.trim()}).filter(Boolean);save();toast('Calendários do Moodle salvos. Toque em Sincronizar.');return}

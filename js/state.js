@@ -3,7 +3,7 @@ import { $, esc, pl, uid, today, parseKey, addDays, toMin, fromMin, fmtHM, monda
 export var KEY='brewer.v1';
 
 /* ---------- estado ---------- */
-export var UI={agDay:null,agView:'dia',revView:'hoje',showDone:false,pick:false,open:{},colView:'set',giveUp:false,catRange:7,asking:false,tkKind:'pessoal',tkP:'pend',tkF:'new',mdCfg:false,mdBusy:false,mdErr:'',showIgn:false,listening:false,pre:null,preTimer:0,sg:[],sgDay:'',dismissed:{},hideSug:'',amb:'off'};
+export var UI={agDay:null,agView:'dia',revView:'hoje',showDone:false,pick:false,open:{},colView:'set',giveUp:false,catRange:7,asking:false,tkKind:'pessoal',tkP:'pend',tkF:'new',mdCfg:false,mdBusy:false,mdErr:'',showIgn:false,listening:false,pre:null,preTimer:0,sg:[],sgDay:'',dismissed:{},hideSug:'',amb:'off',homeSub:'prio'};
 export var SH={};
 export function setSH(val){SH=val}
 
@@ -38,6 +38,7 @@ export function load(){
   var f=fresh();for(var k in f){if(!(k in s))s[k]=f[k]}
   s.tasks=(s.tasks||[]).map(normTask);
   if(!s.draft)s.draft={taskId:'',mins:25};if(!s.draft.kind)s.draft.kind='total';
+  if(s.focus&&s.focus.mode!=='focus'&&s.focus.mode!=='break'){s.lastFocus=s.focus;s.focus=null}
   if(!s.sessMig){(s.cups||[]).forEach(function(c){s.sessions.push({id:'m'+c.id,d:c.d,t0:0,t1:0,mins:c.mins||0,mode:'total',ok:!!c.ok,cupId:c.id,model:c.model,cat:c.cat||'',label:c.label||'',taskId:'',src:'manual',blockId:'',ext:'',approx:true,sim:!!c.sim})});s.sessMig=true}
   var mo=s.moodle;if(!mo.ignored)mo.ignored={};if(!mo.confirmed)mo.confirmed={};
   return s;
@@ -64,36 +65,24 @@ var lock=null;
 export function holdScreen(){if(!S.keepAwake)return;try{if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){lock=l}).catch(function(){})}}catch(e){}}
 export function releaseLock(){try{if(lock)lock.release()}catch(e){}lock=null;stopAmbience()}
 
-var ambCtx=null,ambNode=null,ambGain=null,ambLfo=null;
+var ambAudio=null;
 export function stopAmbience(){
   UI.amb='off';
-  try{if(ambNode)ambNode.stop()}catch(e){}
-  try{if(ambLfo)ambLfo.stop()}catch(e){}
-  try{if(ambCtx)ambCtx.close()}catch(e){}
-  ambNode=null;ambLfo=null;ambGain=null;ambCtx=null;
+  try{if(ambAudio){ambAudio.pause();ambAudio.currentTime=0}}catch(e){}
+  ambAudio=null;
 }
 export function setAmbience(mode){
   stopAmbience();
   if(!mode||mode==='off')return;
   try{
-    var A=window.AudioContext||window.webkitAudioContext;if(!A)return;
-    var ctx=new A(),sr=ctx.sampleRate,len=sr*3,buf=ctx.createBuffer(1,len,sr),data=buf.getChannelData(0);
-    var last=0;
-    for(var i=0;i<len;i++){
-      var w=Math.random()*2-1;
-      if(mode==='cafe'){last=(last+0.02*w)/1.02;data[i]=last*3.2}
-      else{last=(last+0.08*w)/1.08;data[i]=last*1.8}
-    }
-    var src=ctx.createBufferSource();src.buffer=buf;src.loop=true;
-    var flt=ctx.createBiquadFilter();flt.type='lowpass';flt.frequency.value=mode==='cafe'?420:950;
-    var g=ctx.createGain();g.gain.value=mode==='cafe'?0.18:0.12;
-    if(mode==='rain'){
-      var lfo=ctx.createOscillator(),lg=ctx.createGain();
-      lfo.frequency.value=0.18;lg.gain.value=0.04;
-      lfo.connect(lg);lg.connect(g.gain);lfo.start();ambLfo=lfo;
-    }
-    src.connect(flt);flt.connect(g);g.connect(ctx.destination);src.start();
-    ambCtx=ctx;ambNode=src;ambGain=g;UI.amb=mode;
+    var src=mode==='cafe'?'assets/audio/cafe.mp3':'assets/audio/rain.mp3';
+    var a=new Audio(src);
+    a.loop=true;
+    a.volume=mode==='cafe'?0.65:0.55;
+    var p=a.play();
+    if(p&&p.catch)p.catch(function(){});
+    ambAudio=a;
+    UI.amb=mode;
   }catch(e){UI.amb='off'}
 }
 export function alertUser(){

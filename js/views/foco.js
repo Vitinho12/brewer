@@ -73,64 +73,57 @@ export function interruptLine(){
 }
 
 /* ---------- FOCO & RITUAL V60 ANIMADO ---------- */
-export function v60PourSVG(cupColor){
-  var c=cupColor||'#C8654B';
-  return '<svg class="v60-wrap" viewBox="0 0 200 220" aria-hidden="true">'+
-    /* vapor suave */
-    '<path class="v60-steam1" d="M86 34c-4-7 4-13 0-20" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" opacity=".5"/>'+
-    '<path class="v60-steam2" d="M114 36c-4-7 4-13 0-20" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" opacity=".5"/>'+
-    /* bico de ganso e fio de água quente */
-    '<path d="M168 12c-22 0-34 8-48 16l-16 6" fill="none" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>'+
-    '<line class="v60-stream" x1="102" y1="34" x2="100" y2="82" stroke="var(--sun)" stroke-width="3.5" stroke-linecap="round"/>'+
-    /* coador V60 cerâmica */
-    '<path d="M56 54h88l-28 54H84z" fill="var(--surface)" stroke="var(--sea)" stroke-width="3.5" stroke-linejoin="round"/>'+
-    '<path d="M144 64h11a9 9 0 0 1 0 18h-16" fill="none" stroke="var(--sea)" stroke-width="3.5" stroke-linecap="round"/>'+
-    /* cama de café em infusão dentro do filtro */
-    '<path d="M68 76q32-6 64 0l-16 30H84z" fill="#5A3821" opacity=".88"/>'+
-    '<rect x="70" y="108" width="60" height="5" rx="2.5" fill="var(--sea)"/>'+
-    /* gotas de café caindo */
-    '<circle class="v60-drop1" cx="100" cy="118" r="3.2" fill="#4A2C18"/>'+
-    '<circle class="v60-drop2" cx="100" cy="118" r="2.8" fill="#4A2C18"/>'+
-    /* xícara embaixo recebendo o café */
-    '<ellipse cx="100" cy="198" rx="46" ry="7" fill="rgba(0,0,0,.14)"/>'+
-    '<path d="M132 154h10a11 11 0 0 1 0 22h-12" fill="none" stroke="'+c+'" stroke-width="5.5" stroke-linecap="round"/>'+
-    '<path d="M64 144h72v18a36 28 0 0 1-36 32h0a36 28 0 0 1-36-32z" fill="'+c+'"/>'+
-    '<ellipse cx="100" cy="144" rx="36" ry="7" fill="#3A2416"/>'+
-    '<ellipse class="v60-liquid" cx="100" cy="144" rx="31" ry="5" fill="#7B4F2E"/>'+
+export function v60PourSVG(){
+  return '<svg class="v60-filter-only" viewBox="0 0 160 92" aria-hidden="true">'+
+    /* coador V60 cerâmica limpo */
+    '<path d="M42 12h76L94 60H66z" fill="var(--surface)" stroke="var(--sea)" stroke-width="3.5" stroke-linejoin="round"/>'+
+    '<path d="M118 20h10a8 8 0 0 1 0 16h-15" fill="none" stroke="var(--sea)" stroke-width="3.5" stroke-linecap="round"/>'+
+    '<line x1="62" y1="24" x2="72" y2="54" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/>'+
+    '<line x1="98" y1="24" x2="88" y2="54" stroke="var(--line)" stroke-width="2" stroke-linecap="round"/>'+
+    '<rect x="54" y="60" width="52" height="5" rx="2.5" fill="var(--sea)"/>'+
+    /* gotas de café caindo para a xícara real abaixo */
+    '<circle class="v60-drop1" cx="80" cy="70" r="3" fill="#4A2C18"/>'+
+    '<circle class="v60-drop2" cx="80" cy="70" r="2.6" fill="#4A2C18"/>'+
   '</svg>';
 }
 
-export function previewStageHTML(){
+export function previewStageHTML(compact){
   var cm=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:null;
+  var cls='forest-stage'+(compact?' compact':'');
   if(cm!==null){
-    return '<div class="forest-stage">'+cupImg({ok:true,model:cm,id:''},'hero-img',false)+'</div>';
+    return '<div class="'+cls+'">'+cupImg({ok:true,model:cm,id:''},'hero-img',false)+'</div>';
   }
-  return '<div class="forest-stage"><img class="hero-img" src="assets/focus/v60.webp" alt="" aria-hidden="true"></div>';
+  return '<div class="'+cls+'"><img class="hero-img" src="assets/focus/v60.webp" alt="" aria-hidden="true"></div>';
 }
 export function cupPickerHTML(){
   var cur=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:null;
   var total=CUP_ASSETS.good.length,un=S.unlocked.length;
-  var items='<button class="cp-item" data-act="cup-pick" data-v="" aria-pressed="'+(cur===null)+'"><span class="cp-dot" style="background:var(--sun)"></span>'+(un<total?'Descobrir nova ('+un+'/'+total+')':'Automático')+'</button>';
+  var items='<button class="cp-item" data-act="cup-pick" data-v="" aria-pressed="'+(cur===null)+'"><span class="cp-dot" style="background:var(--sun)"></span>'+(un<total?'Descobrir ('+un+'/'+total+')':'Automático')+'</button>';
   S.unlocked.forEach(function(m){
     var meta=cupMeta(m);
     items+='<button class="cp-item" data-act="cup-pick" data-v="'+m+'" aria-pressed="'+(cur===m)+'"><span class="cp-dot" style="background:'+meta.color+'"></span>'+esc(meta.name)+'</button>';
   });
-  return '<p class="label" style="margin-top:14px">Qual xícara preparar?</p><div class="cup-picker" role="group" aria-label="Escolher xícara">'+items+'</div>';
+  return '<div class="cup-picker" role="group" aria-label="Escolher xícara">'+items+'</div>';
 }
 export function ambienceHTML(){
   var cur=UI.amb||'off';
   return '<div class="amb-bar" role="group" aria-label="Som ambiente de foco">'+
-    '<button class="amb-btn" data-act="amb-set" data-v="off" aria-pressed="'+(cur==='off')+'">Som: Desligado</button>'+
-    '<button class="amb-btn" data-act="amb-set" data-v="rain" aria-pressed="'+(cur==='rain')+'">Chuva suave</button>'+
-    '<button class="amb-btn" data-act="amb-set" data-v="cafe" aria-pressed="'+(cur==='cafe')+'">Cafeteria</button>'+
+    '<button class="amb-btn" data-act="amb-set" data-v="off" aria-pressed="'+(cur==='off')+'">🔇 Silêncio</button>'+
+    '<button class="amb-btn" data-act="amb-set" data-v="rain" aria-pressed="'+(cur==='rain')+'">🌧️ Chuva suave</button>'+
+    '<button class="amb-btn" data-act="amb-set" data-v="cafe" aria-pressed="'+(cur==='cafe')+'">☕ Cafeteria</button>'+
   '</div>';
 }
 
 export function effCat(){
   if(S.draft.cat)return S.draft.cat;
-  var id=effTaskId(),t=id?findTask(id):null;return t&&t.cat?t.cat:'';
+  var id=effTaskId(),t=id?findTask(id):null;return t&&t.cat?t.cat:(S.cats[0]||'Estudo');
 }
 export function catChips(){var c=effCat();return S.cats.map(function(n){return '<button class="chip" data-act="cat" data-v="'+esc(n)+'" aria-pressed="'+(n===c)+'">'+esc(n)+'</button>'}).join('')+'<button class="chip" data-act="cat-new">+ Nova</button>'}
+export function catSelectHTML(){
+  var c=effCat();
+  var opts=S.cats.map(function(n){return '<option value="'+esc(n)+'"'+(n===c?' selected':'')+'>'+esc(n)+'</option>'}).join('')+'<option value="__new">+ Nova categoria...</option>';
+  return '<select class="field field-sm" id="catSel" aria-label="Categoria">'+opts+'</select>';
+}
 export function catTotals(days){
   var t={},sum=0;
   days.forEach(function(d){var c=S.log[d]&&S.log[d].cats;if(c)Object.keys(c).forEach(function(k){t[k]=(t[k]||0)+c[k];sum+=c[k]})});
@@ -174,9 +167,9 @@ export function pickTip(cfg){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 export function openRitual(cfg){
-  if(S.focus&&S.focus.mode==='focus'){toast('Já existe um foco em andamento.');go('foco');return}
+  if(S.focus&&S.focus.mode==='focus'){toast('Já existe um foco em andamento.');go(S.tab==='hoje'?'hoje':'foco');return}
   archiveFocus();
-  cfg.kind=cfg.kind==='parcial'?'parcial':'total';UI.pre={step:'ritual',cfg:cfg,tip:pickTip(cfg)};go('foco');
+  cfg.kind=cfg.kind==='parcial'?'parcial':'total';UI.pre={step:'ritual',cfg:cfg,tip:pickTip(cfg)};go(S.tab==='hoje'?'hoje':'foco');
 }
 export function beginFocus(){
   if(!UI.pre)return;var c=UI.pre.cfg;
@@ -190,51 +183,65 @@ export function startFocus(mins,opts){
   var tot=Math.max(1,Math.round(mins*60));
   S.focus={mode:'focus',kind:opts.kind==='parcial'?'parcial':'total',src:opts.src||'manual',blockId:opts.blockId||'',blockDay:opts.blockDay||'',ext:opts.ext||'',taskId:t?t.id:'',label:opts.label||(t?t.text:(custom||'Foco livre')),total:tot,startTime:Date.now(),endTime:Date.now()+tot*1000,model:pickModel(),starter:!!opts.starter,test:mins<1,cat:(opts.cat!==undefined?opts.cat:(opts.taskId!==undefined?(t&&t.cat)||'':effCat()))||'Sem categoria'};
   UI.giveUp=false;UI.pre=null;clearTimeout(UI.preTimer);
-  holdScreen();save();go('foco');
+  holdScreen();save();go(S.tab==='hoje'?'hoje':'foco');
 }
 export function durHTML(){
   var m=S.draft.mins;
-  return '<p class="label">Por quanto tempo?</p><div class="durbox"><div class="durval" id="durVal">'+(m<1?'10 s':fmtDur(m))+'</div><input type="range" class="durrange" id="durRange" min="5" max="240" step="5" value="'+Math.min(240,Math.max(5,m<5?5:m))+'" aria-label="Duração do foco em minutos"><div class="row" style="justify-content:center"><button class="btn quiet small" data-act="dur-minus" aria-label="Menos 5 minutos">−5</button><button class="btn quiet small" data-act="dur-plus" aria-label="Mais 5 minutos">+5</button></div></div>'+(S.testMode?'<div class="row" style="justify-content:center"><button class="btn quiet small" data-act="dur-test">10 s (teste)</button></div>':'');
+  return '<div class="durbox compact">'+
+    '<div class="dur-inline">'+
+      '<button class="btn quiet small" data-act="dur-minus" aria-label="Menos 5 minutos">−5</button>'+
+      '<div class="durval" id="durVal">'+(m<1?'10 s':fmtDur(m))+'</div>'+
+      '<button class="btn quiet small" data-act="dur-plus" aria-label="Mais 5 minutos">+5</button>'+
+    '</div>'+
+    '<input type="range" class="durrange" id="durRange" min="5" max="240" step="5" value="'+Math.min(240,Math.max(5,m<5?5:m))+'" aria-label="Duração do foco em minutos">'+
+    (S.testMode?'<div class="row" style="justify-content:center;margin-top:4px"><button class="btn quiet small" data-act="dur-test">10 s (teste)</button></div>':'')+
+  '</div>';
 }
 export function kindHTML(){return '<p class="label">Como você quer focar?</p>'+seg('kind-set',S.draft.kind,[['total','Foco total'],['parcial','Foco parcial']])+'<p class="small muted" style="margin-top:8px" id="kindNote">'+KIND_NOTE[S.draft.kind]+'</p>'}
 export function updateDur(){var m=S.draft.mins,v=$('#durVal'),r=$('#durRange');if(v)v.textContent=m<1?'10 s':fmtDur(m);if(r)r.value=Math.min(240,Math.max(5,m<5?5:m))}
-export function setKindUI(){document.querySelectorAll('[data-act="kind-set"]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v===S.draft.kind)});var n=$('#kindNote');if(n)n.textContent=KIND_NOTE[S.draft.kind]}
+export function setKindUI(){document.querySelectorAll('[data-act="kind-set"]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.v===S.draft.kind)});var ks=$('#kindSel');if(ks)ks.value=S.draft.kind;var n=$('#kindNote');if(n)n.textContent=KIND_NOTE[S.draft.kind]}
 export function partialDone(f,task){
   return '<p class="lead">Você ficou '+fmtDur(Math.max(1,f.mins||Math.round(f.total/60)))+' em '+esc(f.label)+(f.early?' (encerrado antes do previsto)':'')+'. Sem punição: tudo conta.</p><div class="stack">'+(task&&!task.done?'<button class="btn quiet block" data-act="done-task">Marcar &ldquo;'+esc(task.text)+'&rdquo; como feita</button>':'')+'<button class="btn block" data-act="skip-break">Novo foco</button></div>';
 }
 export function renderPreHTML(){
   var p=UI.pre,c=p.cfg;
   var cm=S.draft&&S.draft.cupModel!=null&&S.unlocked.indexOf(+S.draft.cupModel)>-1?+S.draft.cupModel:0;
-  var cupCol=cupMeta(cm).color;
   if(p.step==='v60'){
-    return '<div class="prep" style="text-align:center">'+v60PourSVG(cupCol)+'<h1>Passando o café...</h1><p class="muted small" style="margin-top:6px">Infusão lenta no V60. Respire fundo.</p><div class="bar-track"><div class="bar-fill"></div></div><div class="stack"><button class="btn quiet block" data-act="pre-skip">Pular e começar</button></div></div>';
+    return '<div class="prep" style="text-align:center">'+
+      v60PourSVG()+
+      '<div class="cup-prep-stage">'+cupImg({ok:true,model:cm,id:''},'cup-prep-img',false)+'</div>'+
+      '<h2>Passando o café...</h2>'+
+      '<p class="muted small" style="margin-top:4px">Respire fundo. Sua xícara já vai começar.</p>'+
+      '<div class="bar-track" style="margin-top:14px"><div class="bar-fill"></div></div>'+
+      '<div class="stack" style="margin-top:14px"><button class="btn quiet block" data-act="pre-skip">Pular e começar</button></div>'+
+    '</div>';
   }
-  return v60PourSVG(cupCol)+'<h1>Vamos preparar o café.</h1>'+
-    '<div class="ritual"><p class="muted small">Tarefa</p><p><b>'+esc(c.label)+'</b></p><p class="muted small" style="margin-top:10px">Tempo</p><p><b>'+(c.mins<1?'10 s (teste)':fmtDur(c.mins))+'</b>, '+(c.kind==='parcial'?'foco parcial':'foco total')+'</p></div>'+
-    '<p class="tip-line">'+esc(p.tip)+'</p>'+
-    (c.gcal?'<p class="small muted" style="margin-top:12px">Compromisso do Google Agenda: começa como foco parcial. Você pode trocar.</p>':'')+
-    seg('pre-kind',c.kind,[['total','Foco total'],['parcial','Foco parcial']])+
-    '<p class="small muted" style="margin-top:8px">'+KIND_NOTE[c.kind]+'</p>'+
-    '<div class="stack"><button class="btn block" data-act="pre-go">Coar café e começar</button><button class="btn quiet block" data-act="pre-skip">Pular ritual</button><button class="btn quiet block" data-act="pre-back">Voltar</button></div>';
+  return '<div style="text-align:center">'+previewStageHTML(true)+'<h2>Vamos preparar o café.</h2></div>'+
+    '<div class="ritual" style="margin-top:12px;padding:12px 14px"><p class="small"><b>'+esc(c.label)+'</b> · '+(c.mins<1?'10 s (teste)':fmtDur(c.mins))+' ('+(c.kind==='parcial'?'foco parcial':'foco total')+')</p></div>'+
+    '<p class="tip-line" style="margin-top:12px;font-size:17px">'+esc(p.tip)+'</p>'+
+    (c.gcal?'<p class="small muted" style="margin-top:8px">Compromisso do Google Agenda: começa como foco parcial.</p>':'')+
+    '<div class="stack" style="margin-top:14px"><button class="btn block" data-act="pre-go">Coar café e começar</button><button class="btn quiet block" data-act="pre-skip">Pular ritual</button><button class="btn quiet block" data-act="pre-back">Voltar</button></div>';
 }
 export function focusBuilderHTML(inHome){
   var k=today(),undone=S.tasks.filter(function(t){return !t.done}).sort(function(a,b){return ((b.plan===k)-(a.plan===k))||cmp(a,b)});
   var cur=effTaskId();
   var opts=undone.map(function(t){return '<option value="'+t.id+'"'+(t.id===cur?' selected':'')+'>'+esc(t.text)+'</option>'}).join('')+'<option value="__other"'+(cur===''?' selected':'')+'>Outra coisa / Foco livre</option>';
+  var kd=S.draft.kind==='parcial'?'parcial':'total';
   return '<div class="'+(inHome?'forest-card':'')+'">'+
     '<div class="forest-head">'+
-      previewStageHTML()+
-      '<h2>'+(inHome?'Prepare sua próxima xícara':'Um bloco, uma coisa.')+'</h2>'+
-      '<p class="muted small" style="margin-top:4px">Escolha a xícara, defina o tempo e deixe o celular de lado.</p>'+
+      previewStageHTML(true)+
+      cupPickerHTML()+
+      durHTML()+
     '</div>'+
-    cupPickerHTML()+
-    '<p class="label">No que você vai focar?</p>'+
-    '<select class="field" id="taskSel" aria-label="Tarefa" style="margin-top:8px">'+opts+'</select>'+
-    (cur===''?'<input class="field" id="customLabel" type="text" maxlength="60" placeholder="Descreva em poucas palavras" style="margin-top:10px">':'')+
-    '<p class="label">Categoria</p><div class="chips">'+catChips()+'</div>'+
-    durHTML()+kindHTML()+
-    '<label class="check-row"><input type="checkbox" id="fAwake"'+(S.keepAwake?' checked':'')+'> Manter a tela ligada durante o foco</label>'+
-    '<div class="stack"><button class="btn block" data-act="start-focus">Preparar café</button></div>'+
+    '<div class="focus-fields">'+
+      '<select class="field field-sm" id="taskSel" aria-label="No que você vai focar?">'+opts+'</select>'+
+      (cur===''?'<input class="field field-sm" id="customLabel" type="text" maxlength="60" placeholder="O que você vai fazer agora?" style="margin-top:8px">':'')+
+      '<div class="focus-grid-2">'+
+        '<div><label class="mini-lbl" for="catSel">Categoria</label>'+catSelectHTML()+'</div>'+
+        '<div><label class="mini-lbl" for="kindSel">Modo</label><select class="field field-sm" id="kindSel" aria-label="Modo de foco"><option value="total"'+(kd==='total'?' selected':'')+'>Total (rígido)</option><option value="parcial"'+(kd==='parcial'?' selected':'')+'>Parcial (livre)</option></select></div>'+
+      '</div>'+
+    '</div>'+
+    '<button class="btn block" data-act="start-focus" style="margin-top:12px">Preparar café</button>'+
   '</div>';
 }
 export function activeFocusHTML(){

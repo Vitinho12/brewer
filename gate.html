@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brewer Gate</title>
+</head>
+<body style="background:#140e0a;color:#f6efe4;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-family:sans-serif">
+  <p style="font-size:14px;color:#a89080">Iniciando pausa consciente...</p>
+  <script>
+    try {
+      var sp = new URLSearchParams(window.location.search || '');
+      var hash = window.location.hash || '';
+      var app = sp.get('app') || sp.get('gate') || (hash ? hash.replace(/^#/, '') : 'Instagram');
+      if (!app || app === '1' || app === 'true') app = 'Instagram';
+      if (app.toLowerCase() === 'x') app = 'Twitter';
+      var formatted = app.charAt(0).toUpperCase() + app.slice(1).toLowerCase();
+      localStorage.setItem('brewer_gate_pending', formatted);
+    } catch(e) {}
+    window.location.replace('./');
+  </script>
+</body>
+</html>

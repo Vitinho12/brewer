@@ -1,8 +1,11 @@
 /* Brewer: cache offline. Troque o número da versão sempre que alterar arquivos publicados. */
-const CACHE = 'brewer-v13';
+const CACHE = 'brewer-v14';
 const APP_SHELL = [
   './',
   './index.html',
+  './gate.html',
+  './instagram.html',
+  './twitter.html',
   './style.css',
   './js/app.js',
   './js/utils.js',

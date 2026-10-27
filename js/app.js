@@ -16,6 +16,14 @@ export var TABS=['hoje','agenda','tarefas','foco','vontade','revisao','colecao',
 
 export function checkGateParam(){
   try{
+    var pending=localStorage.getItem('brewer_gate_pending');
+    if(pending){
+      localStorage.removeItem('brewer_gate_pending');
+      startGate(pending);
+      S.tab='vontade';
+      save();
+      return true;
+    }
     var sp=new URLSearchParams(window.location.search||'');
     var hash=window.location.hash||'';
     var g=null;

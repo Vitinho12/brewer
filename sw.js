@@ -1,5 +1,5 @@
 /* Brewer: cache offline. Troque o número da versão sempre que alterar arquivos publicados. */
-const CACHE = 'brewer-v12';
+const CACHE = 'brewer-v13';
 const APP_SHELL = [
   './',
   './index.html',
@@ -39,7 +39,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (new URL(e.request.url).origin !== self.location.origin) return;
   e.respondWith(caches.open(CACHE).then(async cache => {
-    const cached = await cache.match(e.request);
+    const cached = await cache.match(e.request, { ignoreSearch: true });
     const net = fetch(e.request).then(r => { if (r && r.ok) cache.put(e.request, r.clone()); return r; }).catch(() => cached || cache.match('./index.html'));
     return cached || net;
   }));

@@ -17,9 +17,24 @@ export var TABS=['hoje','agenda','tarefas','foco','vontade','revisao','colecao',
 export function checkGateParam(){
   try{
     var sp=new URLSearchParams(window.location.search||'');
-    var g=sp.get('gate')||(window.location.hash==='#gate'?'Instagram':'');
+    var hash=window.location.hash||'';
+    var g=null;
+    for(var pair of sp.entries()){
+      var k=pair[0].toLowerCase();
+      if(k==='gate'||k==='app'||k==='vontade'||k==='bloqueio'){g=pair[1];break}
+    }
+    if(!g&&hash){
+      var h=hash.replace(/^#/,'');
+      if(h.toLowerCase().indexOf('gate=')>-1)g=h.split(/gate=/i)[1];
+      else if(h.toLowerCase().indexOf('app=')>-1)g=h.split(/app=/i)[1];
+      else if(h.toLowerCase()==='gate'||h.toLowerCase()==='vontade')g='Instagram';
+      else if(['instagram','twitter','x','youtube','tiktok','reddit','linkedin'].indexOf(h.toLowerCase())>-1)g=h;
+    }
     if(g){
-      startGate(g);
+      if(g==='1'||g.toLowerCase()==='true')g='Instagram';
+      if(g.toLowerCase()==='x')g='Twitter';
+      var formatted=g.charAt(0).toUpperCase()+g.slice(1).toLowerCase();
+      startGate(formatted);
       S.tab='vontade';
       save();
       return true;
@@ -118,12 +133,16 @@ document.addEventListener('visibilitychange',function(){
   var f=S.focus;
   if(document.hidden){markAway();return}
   if(checkGateParam()){render();return}
-  if(S.tab==='vontade'&&(!S.wait||S.wait.phase==='gate')){startGate('Instagram');render();return}
+  if(S.tab==='vontade'&&(!S.wait||S.wait.phase==='gate')){
+    var prevApp=(S.wait&&S.wait.app)||'Instagram';
+    startGate(prevApp);render();return;
+  }
   if((f&&f.mode==='focus'&&!f.pausedAt)||(S.wait&&(S.wait.phase==='wait'||S.wait.phase==='gate')))holdScreen();
   render();checkReturn();updateLive();
 });
 window.addEventListener('pagehide',markAway);
 window.addEventListener('pageshow',function(){if(checkGateParam())render();checkReturn()});
+window.addEventListener('focus',function(){if(checkGateParam())render()});
 window.addEventListener('hashchange',function(){if(checkGateParam())render()});
 window.addEventListener('popstate',function(){if(checkGateParam())render()});
 

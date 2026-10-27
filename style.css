@@ -100,10 +100,12 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:42px;backgrou
 .bar-fill{height:100%;width:0;background:var(--sea);border-radius:99px;transition:width .3s linear}
 
 /* vontade */
-.feels{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-.feel{min-height:50px;padding:0 20px;border-radius:999px;background:var(--surface);border:2px solid var(--line);font-weight:600}
-.feel:active{border-color:var(--sea)}
-.feel[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink)}
+.feels{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
+.feel{min-height:54px;padding:8px 12px;border-radius:16px;background:var(--surface);border:1.5px solid var(--line);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:flex-start;gap:9px;text-align:left;transition:all .15s ease}
+.feel .feel-ico{font-size:20px;flex:none}
+.feel .feel-txt{line-height:1.25}
+.feel:active{transform:scale(.98)}
+.feel[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink);box-shadow:0 3px 10px rgba(123,79,46,.12)}
 .gate-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;background:var(--sea-soft);color:var(--sea);font-size:13px;font-weight:700;margin-bottom:12px}
 .gate-warn{border-color:var(--danger);background:var(--surface)}
 .gate-clean{min-height:68vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}

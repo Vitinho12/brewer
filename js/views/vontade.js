@@ -22,15 +22,22 @@ export function curveSVG(){
 /* ---------- VONTADE & MODO SCREENZEN (GATE) ---------- */
 export var GATE_STEPS=[15,20,25,30];
 export var FEELS={
-  'Só hábito':'O polegar foi sozinho no piloto automático. Vire o celular de tela para baixo e faça 3 respirações.',
-  'Tédio':'Levante, beba um copo de água e olhe pela janela por um minuto. O tédio também passa.',
-  'Ansiedade':'Solte o ar mais devagar do que puxou. Escreva em uma linha só o que está te preocupando.',
-  'Fugindo de uma tarefa':'Combine consigo: só 2 minutos nela. Começar é a parte difícil, e depois o impulso costuma ceder.',
-  'Cansaço':'Alongue pescoço e ombros por 1 minuto. Se o cansaço é real, 10 min sem tela descansam mais que rolar o feed.',
-  'Responder alguém':'Entre, responda quem precisa e saia. Evite abrir o feed ou os stories.',
-  'Lazer / tempo livre':'Tudo bem descansar no seu tempo livre. Aproveite os 5 minutos com consciência.'
+  'Só hábito':'O polegar foi no piloto automático. Respire fundo 3 vezes.',
+  'Tédio':'Levante, beba água ou olhe pela janela. O tédio passa rápido.',
+  'Ansiedade':'Solte o ar bem devagar. Escreva em 1 linha o que te preocupa.',
+  'Procrastinando':'Combine consigo: só 2 minutos na tarefa. Começar é o segredo.',
+  'Responder alguém':'Entre, responda quem precisa e saia direto sem olhar o feed.',
+  'Lazer consciente':'Tudo bem descansar no seu tempo livre. Aproveite os 5 min com foco.'
 };
-export var LEISURE_FEELS={'Responder alguém':1,'Lazer / tempo livre':1};
+export var FEEL_ICONS={
+  'Só hábito':'📱',
+  'Tédio':'🥱',
+  'Ansiedade':'⚡',
+  'Procrastinando':'🏃',
+  'Responder alguém':'💬',
+  'Lazer consciente':'☕'
+};
+export var LEISURE_FEELS={'Responder alguém':1,'Lazer consciente':1,'Lazer / tempo livre':1};
 
 export function gateSeconds(){
   var c=L().gateCount||0;
@@ -38,17 +45,28 @@ export function gateSeconds(){
 }
 export function clearGateURL(){
   try{
-    if(window.history&&history.replaceState&&(location.search.indexOf('gate')>-1||location.hash.indexOf('gate')>-1)){
+    if(window.history&&history.replaceState&&(location.search.indexOf('gate')>-1||location.hash.indexOf('gate')>-1||location.search.indexOf('app')>-1||location.hash.indexOf('app')>-1)){
       history.replaceState(null,'',location.pathname);
     }
   }catch(e){}
 }
+export function getAppScheme(app){
+  var a=(app||'').toLowerCase();
+  if(a.includes('twit')||a==='x')return 'twitter://';
+  if(a.includes('insta'))return 'instagram://';
+  if(a.includes('you'))return 'youtube://';
+  if(a.includes('tik'))return 'tiktok://';
+  if(a.includes('reddit'))return 'reddit://';
+  if(a.includes('link'))return 'linkedin://';
+  return null;
+}
 export function startGate(app){
   var secs=gateSeconds(),now=Date.now();
-  var label=app?String(app).charAt(0).toUpperCase()+String(app).slice(1):'Instagram';
-  if(label==='1'||label==='True')label='Instagram';
+  var a=(app||'').trim();
+  var label=a?String(a).charAt(0).toUpperCase()+String(a).slice(1):'Instagram';
+  if(label==='1'||label==='True'||!label)label='Instagram';
+  if(label.toLowerCase()==='x')label='Twitter';
   S.wait={phase:'gate',app:label,feel:'',total:secs,start:now,end:now+secs*1000,attempt:(L().gateCount||0)+1,notified:false};
-  clearGateURL();
   holdScreen();save();
 }
 export function selectFeel(feel){
@@ -80,10 +98,21 @@ export function gateOpenApp(){
   }else{
     logUrge(s.feel,'leisure');
   }
-  var shName=S.gateShortcut||'Liberar Instagram';
   var appTarget=s.app||'Instagram';
+  var shName=S.gateShortcut||'Liberar Instagram';
+  var scheme=getAppScheme(appTarget);
+
   S.wait=null;S.tab='hoje';releaseLock();clearGateURL();save();render();
-  try{window.location.href='shortcuts://run-shortcut?name='+encodeURIComponent(shName)+'&input=text&text='+encodeURIComponent(appTarget)}catch(e){}
+
+  try{
+    window.location.href='shortcuts://run-shortcut?name='+encodeURIComponent(shName)+'&input=text&text='+encodeURIComponent(appTarget);
+  }catch(e){}
+
+  if(scheme){
+    setTimeout(function(){
+      try{window.location.href=scheme}catch(err){}
+    },700);
+  }
 }
 export function gateConfig(){
   var cur=S.gateShortcut||'Liberar Instagram';
@@ -140,10 +169,13 @@ export function renderVontade(){
     /* FASE 2: Tempo zerou (00:00) -> revela os motivos e os botões de decisão */
     var ready=!!s.feel;
     var chips=Object.keys(FEELS).map(function(k){
-      return '<button class="feel" data-act="feel" data-v="'+esc(k)+'" aria-pressed="'+(s.feel===k)+'">'+esc(k)+'</button>';
+      var ico=FEEL_ICONS[k]||'✨';
+      return '<button class="feel" data-act="feel" data-v="'+esc(k)+'" aria-pressed="'+(s.feel===k)+'">'+
+        '<span class="feel-ico">'+ico+'</span><span class="feel-txt">'+esc(k)+'</span>'+
+      '</button>';
     }).join('');
     var first=S.tasks.filter(function(t){return !t.done}).sort(function(a,b){return ((b.plan===today())-(a.plan===today()))||cmp(a,b)})[0];
-    var extra=(s.feel==='Fugindo de uma tarefa')?'<div style="margin-top:14px"><button class="btn sun small" data-act="do-two">Fazer 2 minutos agora'+(first?': '+esc(first.text.length>22?first.text.slice(0,22)+'…':first.text):'')+'</button></div>':'';
+    var extra=(s.feel==='Procrastinando'||s.feel==='Fugindo de uma tarefa')?'<div style="margin-top:14px"><button class="btn sun small" data-act="do-two">Fazer 2 minutos agora'+(first?': '+esc(first.text.length>22?first.text.slice(0,22)+'…':first.text):'')+'</button></div>':'';
     var tipBox=s.feel?'<div class="suggest"><p>'+esc(FEELS[s.feel]||'')+'</p>'+(LEISURE_FEELS[s.feel]?'<p class="small muted" style="margin-top:6px">Como é uso consciente/lazer, não será contado como recaída na sua revisão.</p>':'')+extra+'</div>':'';
     var nextStep=GATE_STEPS[Math.min(GATE_STEPS.length-1,s.attempt)];
     el.innerHTML=
@@ -155,12 +187,12 @@ export function renderVontade(){
         '<p class="label">O que está por trás dessa abertura?</p>'+
         '<div class="feels">'+chips+'</div>'+
         tipBox+
-        '<div class="stack" style="margin-top:26px">'+
-          '<button class="btn block" data-act="gate-stay">'+(f&&f.mode==='focus'?'Voltar para o foco (não abrir)':'Deixar pra lá e ficar no Brewer')+'</button>'+
+        '<div class="stack" style="margin-top:22px">'+
+          '<button class="btn block" data-act="gate-stay">'+(f&&f.mode==='focus'?'Voltar para o foco (não abrir)':'🛡️ Ficar no Brewer (Não abrir)')+'</button>'+
           '<button class="btn quiet block" id="gateOpenBtn" data-act="gate-open-app"'+(ready?'':' disabled')+'>'+esc(gateBtnText(s,0))+'</button>'+
-          '<button class="ghost small" data-act="start-10m" style="text-align:center;margin-top:4px">Quero esperar 10 min na curva da vontade</button>'+
+          '<button class="ghost small" data-act="start-10m" style="text-align:center;margin-top:4px">Ou esperar 10 min na curva da vontade</button>'+
         '</div>'+
-        '<p class="small muted" style="margin-top:24px;text-align:center">Atalho do iPhone: <b>'+esc(S.gateShortcut||'Liberar Instagram')+'</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>'+
+        '<p class="small muted" style="margin-top:22px;text-align:center">Atalho do iPhone: <b>'+esc(S.gateShortcut||'Liberar '+(s.app||'Instagram'))+'</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>'+
       '</div>';
     return;
   }

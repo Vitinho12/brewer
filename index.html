@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=28">
 </head>
 <body data-theme="0">
 <div class="env"></div>
@@ -55,7 +55,9 @@
 // Brewer PWA: instala o Service Worker quando o app estiver servido por HTTPS.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
-    navigator.serviceWorker.register('./sw.js').catch(function(err){ console.warn('Brewer SW:', err); });
+    navigator.serviceWorker.register('./sw.js').then(function(reg){
+      reg.update();
+    }).catch(function(err){ console.warn('Brewer SW:', err); });
   });
 }
 </script>

@@ -109,6 +109,9 @@ function getOrCreateAudio() {
           if (handlers.onComplete) handlers.onComplete();
           return;
         }
+        updateMediaSession(f, false);
+      } else if (f.mode === 'break') {
+        updateMediaSession(f, false);
       }
     });
 
@@ -329,9 +332,8 @@ export function updateMediaSession(f, force) {
     }
   }
 
-  // Atualiza o título a cada 5 segundos (ou em caso de pausa/forçado)
-  var step5 = Math.floor(remSec / 5);
-  var metaKey = step5 + '|' + paused + '|' + label + '|' + (f.model || 0);
+  // Atualiza o título a cada segundo acompanhando exatamente o timer do Brewer
+  var metaKey = remSec + '|' + paused + '|' + label + '|' + (f.model || 0);
   if (metaKey !== lastMetadataKey || force) {
     lastMetadataKey = metaKey;
     try {

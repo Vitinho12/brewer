@@ -100,13 +100,16 @@ select.field{appearance:none;-webkit-appearance:none;padding-right:42px;backgrou
 .bar-fill{height:100%;width:0;background:var(--sea);border-radius:99px;transition:width .3s linear}
 
 /* vontade */
-.feels{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px}
-.feel{min-height:54px;padding:8px 12px;border-radius:16px;background:var(--surface);border:1.5px solid var(--line);font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:flex-start;gap:9px;text-align:left;transition:all .15s ease}
-.feel .feel-ico{font-size:20px;flex:none}
-.feel .feel-txt{line-height:1.25}
+.feels{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:14px}
+.feel{min-height:44px;padding:8px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:500;display:flex;align-items:center;justify-content:center;text-align:center;transition:all .15s ease}
 .feel:active{transform:scale(.98)}
-.feel[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink);box-shadow:0 3px 10px rgba(123,79,46,.12)}
-.gate-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:99px;background:var(--sea-soft);color:var(--sea);font-size:13px;font-weight:700;margin-bottom:12px}
+.feel[aria-pressed="true"]{border-color:var(--sea);background:var(--sea-soft);color:var(--ink);font-weight:600}
+.gate-actions{display:grid;gap:8px;margin-top:20px}
+.gate-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gate-btn{min-height:44px;padding:0 16px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--ink);font-size:14px;font-weight:500;display:inline-flex;align-items:center;justify-content:center;text-align:center;width:100%;transition:all .15s ease}
+.gate-btn:active{transform:scale(.98);background:var(--sea-soft);border-color:var(--sea)}
+.gate-btn[disabled]{opacity:.38;pointer-events:none}
+.gate-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:var(--surface);border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:500;margin-bottom:14px}
 .gate-warn{border-color:var(--danger);background:var(--surface)}
 .gate-clean{min-height:68vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
 .gate-clean .bar-track{width:100%;max-width:280px}

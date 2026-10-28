@@ -29,14 +29,6 @@ export var FEELS={
   'Responder alguém':'Entre, responda quem precisa e saia direto sem olhar o feed.',
   'Lazer consciente':'Tudo bem descansar no seu tempo livre. Aproveite os 5 min com foco.'
 };
-export var FEEL_ICONS={
-  'Só hábito':'📱',
-  'Tédio':'🥱',
-  'Ansiedade':'⚡',
-  'Procrastinando':'🏃',
-  'Responder alguém':'💬',
-  'Lazer consciente':'☕'
-};
 export var LEISURE_FEELS={'Responder alguém':1,'Lazer consciente':1,'Lazer / tempo livre':1};
 
 export function gateSeconds(){
@@ -157,19 +149,17 @@ export function renderVontade(){
           '<div class="wait-time" id="waitTime" style="margin-top:24px">'+mmss(rem)+'</div>'+
           '<div class="bar-track"><div class="bar-fill" id="gateBar" style="width:'+pct+'%"></div></div>'+
           '<div class="breath" style="margin-top:28px"><div class="orb-box"><div class="orb" style="animation-delay:-'+(elapsed%10000)+'ms"></div></div><div><b id="breathLabel">'+(elapsed%10000<4000?'Inspira':'Solta')+'</b><p class="muted small">4 segundos para puxar, 6 para soltar</p></div></div>'+
+          '<button class="gate-btn" data-act="tab" data-tab="hoje" style="max-width:190px;margin-top:32px">Ir para o Hoje</button>'+
         '</div>';
       return;
     }
     /* FASE 2: Tempo zerou (00:00) -> revela os motivos e os botões de decisão */
     var ready=!!s.feel;
     var chips=Object.keys(FEELS).map(function(k){
-      var ico=FEEL_ICONS[k]||'✨';
-      return '<button class="feel" data-act="feel" data-v="'+esc(k)+'" aria-pressed="'+(s.feel===k)+'">'+
-        '<span class="feel-ico">'+ico+'</span><span class="feel-txt">'+esc(k)+'</span>'+
-      '</button>';
+      return '<button class="feel" data-act="feel" data-v="'+esc(k)+'" aria-pressed="'+(s.feel===k)+'">'+esc(k)+'</button>';
     }).join('');
     var first=S.tasks.filter(function(t){return !t.done}).sort(function(a,b){return ((b.plan===today())-(a.plan===today()))||cmp(a,b)})[0];
-    var extra=(s.feel==='Procrastinando'||s.feel==='Fugindo de uma tarefa')?'<div style="margin-top:14px"><button class="btn sun small" data-act="do-two">Fazer 2 minutos agora'+(first?': '+esc(first.text.length>22?first.text.slice(0,22)+'…':first.text):'')+'</button></div>':'';
+    var extra=(s.feel==='Procrastinando'||s.feel==='Fugindo de uma tarefa')?'<div style="margin-top:14px"><button class="gate-btn" data-act="do-two">Fazer 2 minutos agora'+(first?': '+esc(first.text.length>22?first.text.slice(0,22)+'…':first.text):'')+'</button></div>':'';
     var tipBox=s.feel?'<div class="suggest"><p>'+esc(FEELS[s.feel]||'')+'</p>'+(LEISURE_FEELS[s.feel]?'<p class="small muted" style="margin-top:6px">Como é uso consciente/lazer, não será contado como recaída na sua revisão.</p>':'')+extra+'</div>':'';
     var nextStep=GATE_STEPS[Math.min(GATE_STEPS.length-1,s.attempt)];
     el.innerHTML=
@@ -181,17 +171,15 @@ export function renderVontade(){
         '<p class="label">O que está por trás dessa abertura?</p>'+
         '<div class="feels">'+chips+'</div>'+
         tipBox+
-        '<div class="stack" style="margin-top:22px">'+
-          '<button class="btn block" data-act="gate-stay">'+(f&&f.mode==='focus'?'Voltar para o foco (não abrir)':'🛡️ Ficar no Brewer (Não abrir)')+'</button>'+
-          (ready
-            ?'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%">'+
-               '<button class="btn quiet block" data-act="gate-open-app" data-app="Instagram">Liberar Instagram (5m)</button>'+
-               '<button class="btn quiet block" data-act="gate-open-app" data-app="Twitter">Liberar Twitter (5m)</button>'+
-             '</div>'
-            :'<button class="btn quiet block" id="gateOpenBtn" data-act="gate-open-app" disabled>'+esc(gateBtnText(s,0))+'</button>')+
-          '<button class="ghost small" data-act="start-10m" style="text-align:center;margin-top:4px">Ou esperar 10 min na curva da vontade</button>'+
+        '<div class="gate-actions">'+
+          '<div class="gate-row">'+
+            '<button class="gate-btn" data-act="gate-open-app" data-app="Instagram"'+(ready?'':' disabled')+'>Liberar Instagram</button>'+
+            '<button class="gate-btn" data-act="gate-open-app" data-app="Twitter"'+(ready?'':' disabled')+'>Liberar Twitter</button>'+
+          '</div>'+
+          '<button class="gate-btn" data-act="gate-stay">'+(f&&f.mode==='focus'?'Voltar para o foco':'Ficar no Brewer')+'</button>'+
+          '<button class="ghost small" data-act="start-10m" style="justify-content:center;margin-top:2px;font-weight:500">Esperar 10 min na curva da vontade</button>'+
         '</div>'+
-        '<p class="small muted" style="margin-top:22px;text-align:center">Atalhos: <b>Liberar Instagram</b> / <b>Liberar Twitter</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>'+
+        '<p class="small muted" style="margin-top:18px;text-align:center">Atalhos: <b>Liberar Instagram</b> · <b>Liberar Twitter</b> · <button class="ghost small" data-act="gate-cfg">Alterar</button></p>'+
       '</div>';
     return;
   }

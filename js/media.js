@@ -3,8 +3,8 @@ import { S, UI, CUP_ASSETS, cupMeta } from './state.js';
 import { mmss } from './utils.js';
 
 var audioElem = null;
-var lastTickSec = -1;
-var lastPausedState = null;
+var lastMetadataKey = '';
+var lastPositionSync = 0;
 var sessionActive = false;
 
 var handlers = {
@@ -29,7 +29,7 @@ function toAbsUrl(path) {
 export function getAudioSource(mode) {
   if (mode === 'cafe') return 'assets/audio/cafe.mp3';
   if (mode === 'rain') return 'assets/audio/rain.mp3';
-  return 'assets/audio/silence.wav';
+  return 'assets/audio/silence.mp3';
 }
 
 function getArtwork(f) {
@@ -109,9 +109,6 @@ function getOrCreateAudio() {
           if (handlers.onComplete) handlers.onComplete();
           return;
         }
-        updateMediaSession(f, false);
-      } else if (f.mode === 'break') {
-        updateMediaSession(f, false);
       }
     });
 
@@ -134,6 +131,9 @@ function getOrCreateAudio() {
 
 /* Inicia ou prepara o áudio de forma síncrona no clique para atender a política do iOS */
 export function primeFocusAudio(ambience) {
+  if (S.lockScreenAudio === false && (ambience || UI.amb || 'off') === 'off') {
+    return;
+  }
   initMediaSession();
   var a = getOrCreateAudio();
   var mode = ambience || UI.amb || 'off';
@@ -151,10 +151,15 @@ export function primeFocusAudio(ambience) {
 }
 
 export function startFocusMedia(f) {
+  if (S.lockScreenAudio === false && (UI.amb || 'off') === 'off') {
+    return;
+  }
   primeFocusAudio(UI.amb);
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'playing';
   }
+  lastMetadataKey = '';
+  lastPositionSync = 0;
   updateMediaSession(f || S.focus, true);
 }
 
@@ -162,6 +167,11 @@ export function setAmbienceMedia(mode) {
   UI.amb = mode || 'off';
   var f = S.focus;
   var inFocus = f && (f.mode === 'focus' || f.mode === 'break');
+
+  if (inFocus && S.lockScreenAudio === false && mode === 'off') {
+    stopFocusMedia(false);
+    return;
+  }
 
   var a = getOrCreateAudio();
   var src = getAudioSource(mode);
@@ -177,6 +187,8 @@ export function setAmbienceMedia(mode) {
     if (!f.pausedAt) {
       var p = a.play();
       if (p && p.catch) p.catch(function() {});
+    } else {
+      a.pause();
     }
     updateMediaSession(f, true);
   } else {
@@ -199,9 +211,10 @@ export function stopAmbienceMedia() {
   UI.amb = 'off';
   if (!S.focus || (S.focus.mode !== 'focus' && S.focus.mode !== 'break')) {
     stopFocusMedia(false);
-  } else {
-    /* Em foco ativo, mudo significa tocar o silêncio para manter o widget de tela bloqueada vivo */
+  } else if (S.lockScreenAudio !== false) {
     setAmbienceMedia('off');
+  } else {
+    stopFocusMedia(false);
   }
 }
 
@@ -234,6 +247,7 @@ export function completeFocusMedia(f) {
     try { audioElem.pause(); audioElem.currentTime = 0; } catch (e) {}
   }
   sessionActive = false;
+  lastMetadataKey = '';
   if ('mediaSession' in navigator) {
     try {
       var mins = f ? Math.max(1, f.mins || Math.round(f.total / 60)) : 25;
@@ -257,6 +271,8 @@ export function stopFocusMedia(completed) {
     return;
   }
   sessionActive = false;
+  lastMetadataKey = '';
+  lastPositionSync = 0;
   if (audioElem) {
     try { audioElem.pause(); audioElem.currentTime = 0; } catch (e) {}
   }
@@ -271,6 +287,7 @@ export function stopFocusMedia(completed) {
   }
 }
 
+/* Atualiza os metadados e sincroniza a barra de progresso nativa do iOS */
 export function updateMediaSession(f, force) {
   if (!('mediaSession' in navigator)) return;
   f = f || S.focus;
@@ -285,31 +302,21 @@ export function updateMediaSession(f, force) {
   var dur = Math.max(1, f.total || (isBreak ? 300 : 1500));
   var rem = paused ? Math.max(0, f.endTime - f.pausedAt) : Math.max(0, f.endTime - now);
   var remSec = Math.floor(rem / 1000);
-
-  if (!force && remSec === lastTickSec && paused === lastPausedState) {
-    return;
-  }
-  lastTickSec = remSec;
-  lastPausedState = paused;
-
   var elapsed = Math.max(0, dur - remSec);
   var pos = Math.min(dur, Math.max(0, elapsed));
 
+  /* Título estático e limpo: evita que o iOS recarregue o widget na tela bloqueada e pisque */
   var title = '';
   var artist = '☕ Brewer';
   var album = '';
 
   if (isBreak) {
-    title = (paused ? '⏸️ ' : '') + mmss(rem) + ' restantes · Pausa';
+    title = paused ? '⏸️ Pausa em andamento' : '☕ Pausa pós-foco';
     artist = 'Brewer · Celular Liberado';
-    album = 'Descanso pós-foco';
+    album = 'Descanso';
   } else {
     var label = f.label || 'Foco livre';
-    if (paused) {
-      title = '⏸️ ' + mmss(rem) + ' (em pausa) · ' + label;
-    } else {
-      title = mmss(rem) + ' restantes · ' + label;
-    }
+    title = paused ? ('⏸️ ' + label) : label;
     artist = '☕ Brewer' + (f.cat && f.cat !== 'Sem categoria' ? ' · ' + f.cat : '');
     album = (f.kind === 'parcial' ? 'Foco Parcial' : 'Foco Total');
     if (f.model != null && cupMeta(f.model)) {
@@ -317,22 +324,30 @@ export function updateMediaSession(f, force) {
     }
   }
 
-  try {
-    navigator.mediaSession.metadata = new MediaMetadata({
-      title: title,
-      artist: artist,
-      album: album,
-      artwork: getArtwork(f)
-    });
-  } catch (e) {}
-
-  if ('setPositionState' in navigator.mediaSession) {
+  var metaKey = title + '|' + artist + '|' + album + '|' + (f.model || 0);
+  if (metaKey !== lastMetadataKey) {
+    lastMetadataKey = metaKey;
     try {
-      navigator.mediaSession.setPositionState({
-        duration: dur,
-        playbackRate: paused ? 0 : 1,
-        position: pos
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title,
+        artist: artist,
+        album: album,
+        artwork: getArtwork(f)
       });
     } catch (e) {}
+  }
+
+  /* Sincroniza o slider nativo do iOS na inicialização, pausa ou a cada 15 segundos */
+  if (force || paused || (now - lastPositionSync > 15000)) {
+    lastPositionSync = now;
+    if ('setPositionState' in navigator.mediaSession) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration: dur,
+          playbackRate: paused ? 0 : 1,
+          position: pos
+        });
+      } catch (e) {}
+    }
   }
 }

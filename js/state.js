@@ -46,7 +46,12 @@ export function load(){
 }
 export var S=load();
 export function resetState(){S=fresh()}
-export function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+var _saveListeners = [];
+export function onStateSave(fn){ if(typeof fn==='function')_saveListeners.push(fn); }
+export function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+  _saveListeners.forEach(function(fn){ try{ fn(S); }catch(err){ console.warn(err); } });
+}
 export function L(d){d=d||today();if(!S.log[d])S.log[d]={focus:0,resisted:0,gave:0,screen:null,win:'',next:'',cats:{},gateCount:0};if(S.log[d].gateCount==null)S.log[d].gateCount=0;return S.log[d]}
 export function cmp(a,b){var x=a.due||'9999',y=b.due||'9999';return (a.prio-b.prio)||(x<y?-1:x>y?1:0)}
 export function findTask(id){return S.tasks.find(function(t){return t.id===id})}

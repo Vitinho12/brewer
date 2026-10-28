@@ -4,7 +4,7 @@ compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 [triggers]
-crons = ["0 0 * * *"] # 00:00 UTC = 21:00 Horário de Brasília
+crons = ["*/15 * * * *"] # Roda a cada 15 min para verificar se há janelas livres ou horários agendados
 
 [[kv_namespaces]]
 binding = "SUBSCRIPTIONS"

@@ -1,5 +1,5 @@
 /* Brewer: cache offline. Troque o número da versão sempre que alterar arquivos publicados. */
-const CACHE = 'brewer-v25';
+const CACHE = 'brewer-v26';
 const APP_SHELL = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const APP_SHELL = [
   './js/media.js',
   './js/sync.js',
   './js/notifications.js',
+  './js/smart-push.js',
   './js/views/hoje.js',
   './js/views/agenda.js',
   './js/views/tarefas.js',

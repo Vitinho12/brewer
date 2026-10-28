@@ -9,6 +9,7 @@ import { WX, WY, startGate, selectFeel, start10m, gateStay, gateOpenApp, gateCon
 import { renderRevisao } from './views/revisao.js';
 import { renderColecao } from './views/colecao.js';
 import { requestNotifyPermission, notifyBreakDone, subscribeWebPush, unsubscribeWebPush, sendTestPush } from './notifications.js';
+import { recordMorningActivity, scheduleSmartSync } from './smart-push.js';
 import { primeFocusAudio, updateMediaSession, startFocusMedia, stopFocusMedia } from './media.js';
 import { renderJornada, simSession, testAdd, testRem, testSkip, testJump, testClear } from './views/jornada.js';
 
@@ -425,3 +426,5 @@ if(!checkGateParam()){
 }
 render();
 checkReturn();
+recordMorningActivity();
+scheduleSmartSync();

@@ -24,6 +24,16 @@ function corsHeaders() {
   };
 }
 
+async function sendPushToSub(sub, payload) {
+  try {
+    await webpush.sendNotification(sub, JSON.stringify(payload));
+    return true;
+  } catch (err) {
+    console.warn('Erro ao enviar push para sub:', err);
+    return false;
+  }
+}
+
 async function sendPushToAll(env, payload) {
   if (!env.SUBSCRIPTIONS) {
     console.warn('KV SUBSCRIPTIONS não configurado');
@@ -46,6 +56,8 @@ async function sendPushToAll(env, payload) {
       // Se a inscrição expirou ou o usuário desinstalou, remove do KV
       if (err.statusCode === 404 || err.statusCode === 410) {
         await env.SUBSCRIPTIONS.delete(key.name);
+        const schedKey = key.name.replace('sub:', 'sched:');
+        await env.SUBSCRIPTIONS.delete(schedKey);
         expiredCount++;
       }
     }
@@ -107,11 +119,33 @@ export default {
         if (sub && sub.endpoint) {
           const endpointHash = btoa(sub.endpoint).slice(-32).replace(/[^a-zA-Z0-9]/g, '');
           const key = `sub:${endpointHash}`;
+          const schedKey = `sched:${endpointHash}`;
           if (env.SUBSCRIPTIONS) {
             await env.SUBSCRIPTIONS.delete(key);
+            await env.SUBSCRIPTIONS.delete(schedKey);
           }
         }
         return new Response(JSON.stringify({ success: true }), { headers: corsHeaders() });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders() });
+      }
+    }
+
+    // POST /sync-smart - Salva gatilhos inteligentes para o dispositivo
+    if (url.pathname === '/sync-smart' && request.method === 'POST') {
+      try {
+        const data = await request.json();
+        const sub = data.subscription;
+        const triggers = data.triggers || [];
+        if (!sub || !sub.endpoint) {
+          return new Response(JSON.stringify({ error: 'Inscrição inválida' }), { status: 400, headers: corsHeaders() });
+        }
+        const endpointHash = btoa(sub.endpoint).slice(-32).replace(/[^a-zA-Z0-9]/g, '');
+        const key = `sched:${endpointHash}`;
+        if (env.SUBSCRIPTIONS) {
+          await env.SUBSCRIPTIONS.put(key, JSON.stringify(triggers));
+        }
+        return new Response(JSON.stringify({ success: true, count: triggers.length }), { headers: corsHeaders() });
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders() });
       }
@@ -146,15 +180,87 @@ export default {
     return new Response(JSON.stringify({ error: 'Endpoint não encontrado' }), { status: 404, headers: corsHeaders() });
   },
 
-  // Cron Trigger: roda todo dia às 00:00 UTC (21:00 BRT)
+  // Cron Trigger: processa gatilhos inteligentes agendados
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
-      console.log('Executando cron diário das 21h...');
-      await sendPushToAll(env, {
-        title: '🌙 Hora da Revisão · Brewer',
-        body: 'Hora de registrar seu tempo de tela e conferir as xícaras de hoje!',
-        tag: 'brewer-daily-review'
-      });
+      console.log('Executando cron inteligente do Brewer...');
+      if (!env.SUBSCRIPTIONS) return;
+
+      const now = Date.now();
+      const nowDate = new Date();
+      const utcHours = nowDate.getUTCHours();
+      const utcMins = nowDate.getUTCMinutes();
+      const utcDay = nowDate.getUTCDay(); // 0 = Domingo
+
+      // 1. Processa gatilhos personalizados agendados pelo app
+      const schedList = await env.SUBSCRIPTIONS.list({ prefix: 'sched:' });
+      for (const item of schedList.keys) {
+        const rawSched = await env.SUBSCRIPTIONS.get(item.name);
+        if (!rawSched) continue;
+
+        let triggers = [];
+        try { triggers = JSON.parse(rawSched); } catch(e) {}
+        if (!Array.isArray(triggers) || !triggers.length) continue;
+
+        const endpointHash = item.name.replace('sched:', '');
+        const subRaw = await env.SUBSCRIPTIONS.get(`sub:${endpointHash}`);
+        if (!subRaw) {
+          await env.SUBSCRIPTIONS.delete(item.name);
+          continue;
+        }
+
+        let sub = null;
+        try { sub = JSON.parse(subRaw); } catch(e) {}
+        if (!sub) continue;
+
+        const remainingTriggers = [];
+        for (const tr of triggers) {
+          if (tr.time <= now) {
+            // Dispara se estiver na janela recente (até 2h de atraso aceitável)
+            if (now - tr.time < 2 * 60 * 60 * 1000) {
+              console.log('Disparando push inteligente agendado:', tr.title);
+              await sendPushToSub(sub, {
+                title: tr.title,
+                body: tr.body,
+                tag: tr.tag || 'brewer-smart'
+              });
+            }
+          } else {
+            remainingTriggers.push(tr);
+          }
+        }
+
+        if (remainingTriggers.length !== triggers.length) {
+          if (remainingTriggers.length > 0) {
+            await env.SUBSCRIPTIONS.put(item.name, JSON.stringify(remainingTriggers));
+          } else {
+            await env.SUBSCRIPTIONS.delete(item.name);
+          }
+        }
+      }
+
+      // 2. Fallbacks de segurança se o app não tiver sincronizado
+      // Domingo às 23:30 UTC = 20:30 BRT Domingo (Ritmo & Retomada)
+      const isSundayNight = (utcDay === 0 && utcHours === 23 && utcMins >= 25 && utcMins <= 40);
+      if (isSundayNight) {
+        console.log('Executando fechamento de Domingo à noite...');
+        await sendPushToAll(env, {
+          title: '🌙 Domingo à noite · Brewer',
+          body: 'Uma semana se encerra. Amanhã é segunda-feira: uma página limpa para recomeçar no seu ritmo.',
+          tag: 'brewer-sunday-fallback'
+        });
+      }
+
+      // Manhã às 10:30 UTC = 07:30 BRT (Convite matinal)
+      const isMorningHour = (utcHours === 10 && utcMins >= 25 && utcMins <= 40);
+      if (isMorningHour) {
+        console.log('Executando convite matinal das 07:30 BRT...');
+        await sendPushToAll(env, {
+          title: '☕ Bom dia · Brewer',
+          body: 'Um momento tranquilo para tomar um café e definir o foco de hoje.',
+          tag: 'brewer-morning-fallback'
+        });
+      }
     })());
   }
 };

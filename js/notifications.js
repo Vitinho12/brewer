@@ -1,6 +1,7 @@
 import { S, toast, save } from './state.js';
 import { render } from './app.js';
 import { esc } from './utils.js';
+import { scheduleSmartSync } from './smart-push.js';
 
 export var VAPID_PUBLIC_KEY = 'BO9XJIFxJG6y9AA-Pg8cEgK2nLk9yoEgekLsZb92VyxKAeFeRyym4kINuLxZ7teFrVoaO6Vm2hTeGywRaoDC_W8';
 export var DEFAULT_PUSH_SERVER = 'https://brewer-push.victor120702.workers.dev';
@@ -89,6 +90,7 @@ export async function subscribeWebPush(customServerUrl) {
         save();
         toast('✅ Notificações conectadas com sucesso!');
         render();
+        scheduleSmartSync();
         return true;
       } else {
         toast('Erro ao cadastrar no servidor de push.');

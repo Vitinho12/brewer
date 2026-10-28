@@ -1,5 +1,5 @@
 /* Brewer: cache offline. Troque o número da versão sempre que alterar arquivos publicados. */
-const CACHE = 'brewer-v28';
+const CACHE = 'brewer-v29';
 const APP_SHELL = [
   './',
   './index.html',
@@ -35,17 +35,26 @@ for (let i = 1; i <= 12; i++) APP_SHELL.push(`./assets/cups/cup-${String(i).padS
 APP_SHELL.push('./assets/cups/cup-broken.webp');
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(APP_SHELL.map(u => c.add(u)))).then(() => self.skipWaiting()));
+  /* cache:'reload' ignora o cache HTTP do GitHub Pages (max-age=10min) e baixa sempre a versão nova */
+  e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(APP_SHELL.map(u => c.add(new Request(u, { cache: 'reload' }))))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.map(k => k !== CACHE ? caches.delete(k) : null))).then(() => self.clients.claim()));
 });
-/* stale-while-revalidate: abre rápido do cache e atualiza em segundo plano */
+/* Código (html/css/js/json): rede primeiro (até 3s) para pegar atualizações na hora, com cache como reserva offline.
+   Imagens e áudio: cache primeiro (rápido) e atualiza em segundo plano. */
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  if (new URL(e.request.url).origin !== self.location.origin) return;
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin) return;
+  const isCode = e.request.mode === 'navigate' || /\.(html|css|js|json)$/.test(url.pathname) || url.pathname.endsWith('/');
   e.respondWith(caches.open(CACHE).then(async cache => {
-    const cached = await cache.match(e.request, { ignoreSearch: true });
+    const cached = await cache.match(e.request, { ignoreSearch: !isCode });
+    if (isCode) {
+      const net = fetch(e.request, { cache: 'no-cache' }).then(r => { if (r && r.ok) cache.put(e.request, r.clone()); return r; });
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 3000));
+      return Promise.race([net, timeout]).catch(() => cached || net.catch(() => cache.match('./index.html')));
+    }
     const net = fetch(e.request).then(r => { if (r && r.ok) cache.put(e.request, r.clone()); return r; }).catch(() => cached || cache.match('./index.html'));
     return cached || net;
   }));

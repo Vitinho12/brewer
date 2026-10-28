@@ -3,6 +3,7 @@ import { render } from './app.js';
 import { esc } from './utils.js';
 
 export var VAPID_PUBLIC_KEY = 'BO9XJIFxJG6y9AA-Pg8cEgK2nLk9yoEgekLsZb92VyxKAeFeRyym4kINuLxZ7teFrVoaO6Vm2hTeGywRaoDC_W8';
+export var DEFAULT_PUSH_SERVER = 'https://brewer-push.victor120702.workers.dev';
 
 export function isNotifySupported() {
   return typeof window !== 'undefined' && 'Notification' in window;
@@ -74,7 +75,7 @@ export async function subscribeWebPush(customServerUrl) {
       applicationServerKey: urlB64ToUint8Array(VAPID_PUBLIC_KEY)
     });
 
-    var server = (customServerUrl || S.pushServerUrl || '').trim();
+    var server = (customServerUrl || S.pushServerUrl || DEFAULT_PUSH_SERVER).trim();
     if (server) {
       server = server.replace(/\/+$/, '');
       var res = await fetch(server + '/subscribe', {
@@ -107,7 +108,7 @@ export async function subscribeWebPush(customServerUrl) {
 }
 
 export async function sendTestPush(customServerUrl) {
-  var server = (customServerUrl || S.pushServerUrl || '').trim().replace(/\/+$/, '');
+  var server = (customServerUrl || S.pushServerUrl || DEFAULT_PUSH_SERVER).trim().replace(/\/+$/, '');
   if (!server) {
     toast('Configure a URL do servidor de push primeiro.');
     return;
@@ -186,22 +187,19 @@ export function notifyAwayWarning() {
 export function pushSettingsHTML() {
   var p = notifyPermission();
   var sub = !!S.pushSubscribed;
-  var sUrl = S.pushServerUrl || '';
   var lockAudio = S.lockScreenAudio !== false;
 
   return '<div class="sec" style="margin-top:20px;padding:16px 14px;border:1px solid var(--edge);border-radius:12px;background:var(--sub)">' +
     '<h3 style="display:flex;align-items:center;justify-content:space-between;margin:0 0 8px 0">' +
-      '<span>🔔 Notificações & Tela Bloqueada</span>' +
+      '<span>🔔 Notificações no iPhone</span>' +
       (sub ? '<span class="tag">Ativo</span>' : '') +
     '</h3>' +
     '<p class="muted small">Receba o lembrete da revisão às 21h e alertas de foco mesmo com o app fechado no iPhone.</p>' +
     
     '<div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">' +
-      '<label class="flabel" for="pushServerInput">URL do Servidor Push (Cloudflare)</label>' +
-      '<input class="field field-sm" id="pushServerInput" type="url" placeholder="https://brewer-push.seu-user.workers.dev" value="' + esc(sUrl) + '">' +
       '<div class="row" style="margin-top:4px">' +
-        '<button class="btn small" data-act="push-connect">' + (sub ? 'Atualizar Conexão' : 'Ativar no meu iPhone') + '</button>' +
-        (sUrl ? '<button class="btn quiet small" data-act="push-test">Testar Agora</button>' : '') +
+        '<button class="btn small" data-act="push-connect">' + (sub ? '✓ Notificações Conectadas' : 'Ativar Notificações no iPhone') + '</button>' +
+        '<button class="btn quiet small" data-act="push-test">Testar Agora</button>' +
       '</div>' +
     '</div>' +
 

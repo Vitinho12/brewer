@@ -3,8 +3,8 @@ import { S, UI, CUP_ASSETS, cupMeta } from './state.js';
 import { mmss } from './utils.js';
 
 var audioElem = null;
-var lastMetadataKey = '';
-var lastPositionSync = 0;
+var lastTickSec = -1;
+var lastPausedState = null;
 var sessionActive = false;
 
 var handlers = {
@@ -29,7 +29,7 @@ function toAbsUrl(path) {
 export function getAudioSource(mode) {
   if (mode === 'cafe') return 'assets/audio/cafe.mp3';
   if (mode === 'rain') return 'assets/audio/rain.mp3';
-  return 'assets/audio/silence.mp3';
+  return 'assets/audio/silence.wav';
 }
 
 function getArtwork(f) {
@@ -115,6 +115,13 @@ function getOrCreateAudio() {
       }
     });
 
+    audioElem.addEventListener('seeked', function() {
+      var f = S.focus;
+      if (f && (f.mode === 'focus' || f.mode === 'break')) {
+        updateMediaSession(f, true);
+      }
+    });
+
     audioElem.addEventListener('play', function() {
       if ('mediaSession' in navigator) {
         navigator.mediaSession.playbackState = 'playing';
@@ -161,8 +168,8 @@ export function startFocusMedia(f) {
   if ('mediaSession' in navigator) {
     navigator.mediaSession.playbackState = 'playing';
   }
-  lastMetadataKey = '';
-  lastPositionSync = 0;
+  lastTickSec = -1;
+  lastPausedState = null;
   updateMediaSession(f || S.focus, true);
 }
 
@@ -215,6 +222,7 @@ export function stopAmbienceMedia() {
   if (!S.focus || (S.focus.mode !== 'focus' && S.focus.mode !== 'break')) {
     stopFocusMedia(false);
   } else if (S.lockScreenAudio !== false) {
+    /* Em foco ativo, mudo significa tocar o silêncio para manter o widget de tela bloqueada vivo */
     setAmbienceMedia('off');
   } else {
     stopFocusMedia(false);
@@ -250,7 +258,8 @@ export function completeFocusMedia(f) {
     try { audioElem.pause(); audioElem.currentTime = 0; } catch (e) {}
   }
   sessionActive = false;
-  lastMetadataKey = '';
+  lastTickSec = -1;
+  lastPausedState = null;
   if ('mediaSession' in navigator) {
     try {
       var mins = f ? Math.max(1, f.mins || Math.round(f.total / 60)) : 25;
@@ -274,8 +283,8 @@ export function stopFocusMedia(completed) {
     return;
   }
   sessionActive = false;
-  lastMetadataKey = '';
-  lastPositionSync = 0;
+  lastTickSec = -1;
+  lastPausedState = null;
   if (audioElem) {
     try { audioElem.pause(); audioElem.currentTime = 0; } catch (e) {}
   }
@@ -290,7 +299,6 @@ export function stopFocusMedia(completed) {
   }
 }
 
-/* Atualiza os metadados e sincroniza a barra de progresso nativa do iOS */
 export function updateMediaSession(f, force) {
   if (!('mediaSession' in navigator)) return;
   f = f || S.focus;
@@ -305,25 +313,30 @@ export function updateMediaSession(f, force) {
   var dur = Math.max(1, f.total || (isBreak ? 300 : 1500));
   var rem = paused ? Math.max(0, f.endTime - f.pausedAt) : Math.max(0, f.endTime - now);
   var remSec = Math.floor(rem / 1000);
+
+  if (!force && remSec === lastTickSec && paused === lastPausedState) {
+    return;
+  }
+  lastTickSec = remSec;
+  lastPausedState = paused;
+
   var elapsed = Math.max(0, dur - remSec);
   var pos = Math.min(dur, Math.max(0, elapsed));
 
-  /* Título com o tempo real visível na tela bloqueada (atualiza a cada 5s) */
-  var timeStr = mmss(rem);
   var title = '';
   var artist = '☕ Brewer';
   var album = '';
 
   if (isBreak) {
-    title = (paused ? '⏸️ ' : '') + timeStr + ' · Pausa';
+    title = (paused ? '⏸️ ' : '') + mmss(rem) + ' restantes · Pausa';
     artist = 'Brewer · Celular Liberado';
     album = 'Descanso pós-foco';
   } else {
     var label = f.label || 'Foco livre';
     if (paused) {
-      title = '⏸️ ' + timeStr + ' (pausa) · ' + label;
+      title = '⏸️ ' + mmss(rem) + ' (em pausa) · ' + label;
     } else {
-      title = timeStr + ' · ' + label;
+      title = mmss(rem) + ' restantes · ' + label;
     }
     artist = '☕ Brewer' + (f.cat && f.cat !== 'Sem categoria' ? ' · ' + f.cat : '');
     album = (f.kind === 'parcial' ? 'Foco Parcial' : 'Foco Total');
@@ -332,32 +345,22 @@ export function updateMediaSession(f, force) {
     }
   }
 
-  // Atualiza o título a cada 5 segundos de forma estável no iOS (sem sobrecarregar o MediaSession)
-  var step5 = Math.floor(remSec / 5);
-  var metaKey = step5 + '|' + paused + '|' + label + '|' + (f.model || 0);
-  if (metaKey !== lastMetadataKey || force) {
-    lastMetadataKey = metaKey;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: title,
+      artist: artist,
+      album: album,
+      artwork: getArtwork(f)
+    });
+  } catch (e) {}
+
+  if ('setPositionState' in navigator.mediaSession) {
     try {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: title,
-        artist: artist,
-        album: album,
-        artwork: getArtwork(f)
+      navigator.mediaSession.setPositionState({
+        duration: dur,
+        playbackRate: paused ? 0 : 1,
+        position: pos
       });
     } catch (e) {}
-  }
-
-  /* Sincroniza o slider nativo do iOS na inicialização, pausa ou a cada 10 segundos */
-  if (force || paused || (now - lastPositionSync > 10000)) {
-    lastPositionSync = now;
-    if ('setPositionState' in navigator.mediaSession) {
-      try {
-        navigator.mediaSession.setPositionState({
-          duration: dur,
-          playbackRate: paused ? 0 : 1,
-          position: pos
-        });
-      } catch (e) {}
-    }
   }
 }

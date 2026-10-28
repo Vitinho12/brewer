@@ -3,15 +3,15 @@
   --sea:#7B4F2E; --on-sea:#FFFBF4; --sea-soft:#EADBC6; --sun:#C98A24; --sun-ink:#2B1A00; --bar:rgba(255,251,244,.94); --danger:#B4412F;
   color-scheme:light;
   box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
-html{height:100%;min-height:100dvh;overflow:hidden;overscroll-behavior:none;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
 *,*::before,*::after{box-sizing:inherit}
-body{margin:0;height:100%;min-height:100dvh;min-height:-webkit-fill-available;display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:none;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:102vh;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px;line-height:1.5;-webkit-tap-highlight-color:transparent}
 body.locked{overflow:hidden}
-body.locked #scroll{overflow:hidden}
-/* app shell: só #scroll rola; a barra é fixada no rodapé da viewport */
-#scroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
-.wrap{max-width:520px;margin:0 auto;padding:calc(26px + env(safe-area-inset-top,0px)) 22px calc(96px + env(safe-area-inset-bottom,0px))}
+#scroll{display:block}
+.wrap{max-width:520px;min-height:102vh;margin:0 auto;padding:26px 22px 170px}
 h1,h2,.display{font-family:"Bricolage Grotesque",Figtree,system-ui,sans-serif;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:0}
 h1{font-size:34px}
 h2{font-size:23px}
@@ -138,17 +138,17 @@ body.gate-lock .bar{pointer-events:none;opacity:.25;transition:opacity .25s ease
 .bcap{margin:22px 0 6px;font-weight:600}
 
 /* barra inferior fixa */
-.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bar);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:4px 8px calc(2px + env(safe-area-inset-bottom,0px))}
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bar);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));box-shadow:0 50px 0 50px var(--bar)}
 .bar-in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 1.45fr 1fr 1fr;gap:4px;align-items:center}
-.bar button{min-height:46px;border-radius:14px;font-weight:600;font-size:11px;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
-.bar button svg{width:20px;height:20px}
+.bar button{min-height:56px;border-radius:18px;font-weight:600;font-size:12px;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center}
+.bar button svg{width:22px;height:22px}
 .bar button[aria-current="page"]{color:var(--ink);background:var(--sea-soft)}
-.bar .urge{background:var(--sun);color:var(--sun-ink);font-weight:700;font-size:12px;line-height:1.15;border-radius:999px;box-shadow:0 6px 18px rgba(244,182,59,.35);padding:0 8px;min-height:46px}
+.bar .urge{background:var(--sun);color:var(--sun-ink);font-weight:700;font-size:13px;line-height:1.15;border-radius:999px;box-shadow:0 6px 18px rgba(244,182,59,.35);padding:0 8px}
 .bar .urge[aria-current="page"]{background:var(--sun);color:var(--sun-ink);outline:3px solid var(--sea);outline-offset:2px}
-.runpill{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;justify-content:center;pointer-events:none}
+.runpill{position:fixed;left:0;right:0;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:25;display:flex;justify-content:center;pointer-events:none}
 .runpill button{pointer-events:auto;background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:600;font-size:15px;min-height:44px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
 .runpill b{font-variant-numeric:tabular-nums}
-.toast{position:fixed;left:16px;right:16px;bottom:calc(126px + env(safe-area-inset-bottom,0px));z-index:30;max-width:488px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;text-align:center;font-size:15px}
+.toast{position:fixed;left:16px;right:16px;bottom:calc(140px + env(safe-area-inset-bottom,0px));z-index:30;max-width:488px;margin:0 auto;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:16px;text-align:center;font-size:15px}
 
 /* folha de formulário */
 .back{position:fixed;inset:0;z-index:40;background:rgba(8,16,24,.55);display:flex;align-items:flex-end;justify-content:center}

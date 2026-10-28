@@ -305,18 +305,23 @@ export function updateMediaSession(f, force) {
   var elapsed = Math.max(0, dur - remSec);
   var pos = Math.min(dur, Math.max(0, elapsed));
 
-  /* Título estático e limpo: evita que o iOS recarregue o widget na tela bloqueada e pisque */
+  /* Título com o tempo real visível na tela bloqueada (atualiza a cada 5s) */
+  var timeStr = mmss(rem);
   var title = '';
   var artist = '☕ Brewer';
   var album = '';
 
   if (isBreak) {
-    title = paused ? '⏸️ Pausa em andamento' : '☕ Pausa pós-foco';
+    title = (paused ? '⏸️ ' : '') + timeStr + ' · Pausa';
     artist = 'Brewer · Celular Liberado';
-    album = 'Descanso';
+    album = 'Descanso pós-foco';
   } else {
     var label = f.label || 'Foco livre';
-    title = paused ? ('⏸️ ' + label) : label;
+    if (paused) {
+      title = '⏸️ ' + timeStr + ' (pausa) · ' + label;
+    } else {
+      title = timeStr + ' · ' + label;
+    }
     artist = '☕ Brewer' + (f.cat && f.cat !== 'Sem categoria' ? ' · ' + f.cat : '');
     album = (f.kind === 'parcial' ? 'Foco Parcial' : 'Foco Total');
     if (f.model != null && cupMeta(f.model)) {
@@ -324,8 +329,10 @@ export function updateMediaSession(f, force) {
     }
   }
 
-  var metaKey = title + '|' + artist + '|' + album + '|' + (f.model || 0);
-  if (metaKey !== lastMetadataKey) {
+  // Atualiza o título a cada 5 segundos (ou em caso de pausa/forçado)
+  var step5 = Math.floor(remSec / 5);
+  var metaKey = step5 + '|' + paused + '|' + label + '|' + (f.model || 0);
+  if (metaKey !== lastMetadataKey || force) {
     lastMetadataKey = metaKey;
     try {
       navigator.mediaSession.metadata = new MediaMetadata({
@@ -337,8 +344,8 @@ export function updateMediaSession(f, force) {
     } catch (e) {}
   }
 
-  /* Sincroniza o slider nativo do iOS na inicialização, pausa ou a cada 15 segundos */
-  if (force || paused || (now - lastPositionSync > 15000)) {
+  /* Sincroniza o slider nativo do iOS na inicialização, pausa ou a cada 10 segundos */
+  if (force || paused || (now - lastPositionSync > 10000)) {
     lastPositionSync = now;
     if ('setPositionState' in navigator.mediaSession) {
       try {

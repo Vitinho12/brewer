@@ -282,22 +282,22 @@ export function gcalPanelHTML(){
 
   if(cfg.status==='connected'){
     if(cfg.availableCals&&cfg.availableCals.length){
-      h+='<div style="margin-top:18px"><label class="flabel" style="margin-bottom:4px">Seus calendários do Google</label>'+
-        '<p class="small muted" style="margin-bottom:10px">Marque quais você quer sincronizar na agenda do Brewer:</p>'+
-        '<div style="display:grid;gap:8px">'+
+      h+='<div style="margin-top:20px"><label class="flabel" style="margin-bottom:4px">Seus calendários do Google</label>'+
+        '<p class="small muted" style="margin-bottom:12px">Marque quais você quer sincronizar na agenda do Brewer:</p>'+
+        '<div style="display:grid;gap:10px">'+
         cfg.availableCals.map(function(c){
           var sel=(cfg.selectedCals||['primary']).indexOf(c.id)>-1||(c.primary&&(cfg.selectedCals||[]).indexOf('primary')>-1);
           var isMd=(cfg.moodleCals||[]).indexOf(c.id)>-1;
-          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px">'+
+          return '<div style="padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:10px">'+
             '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0">'+
-              '<input type="checkbox" data-act="gc-toggle-cal" data-id="'+esc(c.id)+'"'+(sel?' checked':'')+' style="width:18px;height:18px;accent-color:var(--sea);flex:none">'+
-              '<span style="width:10px;height:10px;border-radius:50%;background:'+esc(c.bg)+';flex:none"></span>'+
-              '<span style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.summary)+(c.primary?' <span class="muted small">(Principal)</span>':'')+'</span>'+
+              '<input type="checkbox" data-act="gc-toggle-cal" data-id="'+esc(c.id)+'"'+(sel?' checked':'')+' style="width:20px;height:20px;accent-color:var(--sea);flex:none">'+
+              '<span style="width:12px;height:12px;border-radius:50%;background:'+esc(c.bg)+';flex:none"></span>'+
+              '<span style="font-size:15px;font-weight:600;line-height:1.2;word-break:break-word">'+esc(c.summary)+(c.primary?' <span class="muted small" style="font-weight:400">(Principal)</span>':'')+'</span>'+
             '</label>'+
-            '<button class="ghost small" data-act="gc-toggle-md" data-id="'+esc(c.id)+'" style="font-size:12px;padding:3px 8px;border-radius:8px;background:'+(isMd?'var(--sea-soft)':'transparent')+';color:'+(isMd?'var(--ink)':'var(--muted)')+';flex:none;margin-left:8px">'+(isMd?'Moodle ✓':'Moodle')+'</button>'+
+            '<button class="ghost small" data-act="gc-toggle-md" data-id="'+esc(c.id)+'" style="font-size:12px;padding:5px 10px;border-radius:99px;border:1px solid '+(isMd?'var(--sea)':'var(--line)')+';background:'+(isMd?'var(--sea-soft)':'transparent')+';color:'+(isMd?'var(--ink)':'var(--muted)')+';flex:none;font-weight:600;min-height:30px">'+(isMd?'✓ Moodle':'Moodle')+'</button>'+
           '</div>';
         }).join('')+
-        '</div><div class="row" style="margin-top:8px"><button class="ghost small" data-act="gc-reload-cals">Atualizar lista de calendários</button></div></div>';
+        '</div><div class="row" style="margin-top:10px"><button class="ghost small" data-act="gc-reload-cals">Atualizar lista de calendários</button></div></div>';
     } else {
       h+='<div class="nudge small" style="margin-top:16px"><p>Quer escolher quais calendários puxar?</p><div class="row" style="margin-top:8px"><button class="btn quiet small" data-act="gc-reload-cals">Buscar meus calendários do Google</button></div></div>';
     }

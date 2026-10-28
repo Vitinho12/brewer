@@ -193,6 +193,22 @@ document.addEventListener('click',function(e){
     case 'push-connect':var psi=$('#pushServerInput');subscribeWebPush(psi?psi.value.trim():'');break;
     case 'push-disconnect':unsubscribeWebPush();break;
     case 'push-test':var psi2=$('#pushServerInput');sendTestPush(psi2?psi2.value.trim():'');break;
+    case 'pwa-force-update':
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var reg of regs) reg.unregister();
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var name of names) caches.delete(name);
+        });
+      }
+      toast('Limpando cache e atualizando...');
+      setTimeout(function() {
+        window.location.reload(true);
+      }, 300);
+      break;
     case 'toggle-lock-audio':S.lockScreenAudio=S.lockScreenAudio===false?true:false;save();render();break;
     case 'toggle':t=findTask(id);if(t){setDone(t,!t.done);save();render()}break;
     case 'toggle-sh':t=findTask(id);if(t){setDone(t,!t.done);save();prioSheet();render()}break;

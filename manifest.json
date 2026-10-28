@@ -1,7 +1,7 @@
 {
   "name": "Brewer",
   "short_name": "Brewer",
-  "id": "./",
+  "id": "/brewer/",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

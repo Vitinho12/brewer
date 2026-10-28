@@ -332,8 +332,9 @@ export function updateMediaSession(f, force) {
     }
   }
 
-  // Atualiza o título a cada segundo acompanhando exatamente o timer do Brewer
-  var metaKey = remSec + '|' + paused + '|' + label + '|' + (f.model || 0);
+  // Atualiza o título a cada 5 segundos de forma estável no iOS (sem sobrecarregar o MediaSession)
+  var step5 = Math.floor(remSec / 5);
+  var metaKey = step5 + '|' + paused + '|' + label + '|' + (f.model || 0);
   if (metaKey !== lastMetadataKey || force) {
     lastMetadataKey = metaKey;
     try {

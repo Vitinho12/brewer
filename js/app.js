@@ -8,7 +8,7 @@ import { AWAY_ASK_MS, breakFocus, completeFocus, endPartial, checkReturn, answer
 import { WX, WY, startGate, selectFeel, start10m, gateStay, gateOpenApp, gateConfig, gateBtnText, startWait, logUrge, finishWait, renderVontade } from './views/vontade.js';
 import { renderRevisao } from './views/revisao.js';
 import { renderColecao } from './views/colecao.js';
-import { requestNotifyPermission, notifyBreakDone } from './notifications.js';
+import { requestNotifyPermission, notifyBreakDone, subscribeWebPush, sendTestPush } from './notifications.js';
 import { primeFocusAudio, updateMediaSession, startFocusMedia, stopFocusMedia } from './media.js';
 import { renderJornada, simSession, testAdd, testRem, testSkip, testJump, testClear } from './views/jornada.js';
 
@@ -189,6 +189,9 @@ document.addEventListener('click',function(e){
     case 'tab':go(el.dataset.tab);break;
     case 'prio-sheet':prioSheet();break;
     case 'notify-enable':requestNotifyPermission();break;
+    case 'push-connect':var psi=$('#pushServerInput');subscribeWebPush(psi?psi.value.trim():'');break;
+    case 'push-test':var psi2=$('#pushServerInput');sendTestPush(psi2?psi2.value.trim():'');break;
+    case 'toggle-lock-audio':S.lockScreenAudio=S.lockScreenAudio===false?true:false;save();render();break;
     case 'toggle':t=findTask(id);if(t){setDone(t,!t.done);save();render()}break;
     case 'toggle-sh':t=findTask(id);if(t){setDone(t,!t.done);save();prioSheet();render()}break;
     case 'plan':t=findTask(id);if(t){if(setPlan(t,t.plan!==today())){save();render()}}break;

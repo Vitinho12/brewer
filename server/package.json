@@ -1,0 +1,14 @@
+{
+  "name": "brewer-push-server",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker para envio de notificações Web Push do Brewer",
+  "main": "worker.js",
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

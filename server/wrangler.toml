@@ -1,0 +1,11 @@
+name = "brewer-push"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[triggers]
+crons = ["0 0 * * *"] # 00:00 UTC = 21:00 Horário de Brasília
+
+[[kv_namespaces]]
+binding = "SUBSCRIPTIONS"
+id = "brewer_subscriptions"

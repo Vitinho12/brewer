@@ -1,6 +1,7 @@
 import { $, esc, pl, today, parseKey, addDays, fmtHM, DAYL, DAYN, lastDays, seg } from '../utils.js';
 import { S, UI, L, planned, routinePct, currentGoal, qualifies, screenStatusHTML } from '../state.js';
 import { catHTML, catBars, interruptLine } from './foco.js';
+import { pushSettingsHTML } from '../notifications.js';
 
 /* ---------- REVISÃO ---------- */
 export function bars(days,vals,max,fmt,sun){
@@ -23,7 +24,8 @@ export function renderRevisao(){
       '<div class="pair"><input class="field field-sm" id="fScreenH" data-f="screenH" type="number" inputmode="numeric" min="0" max="23" placeholder="horas" value="'+sh+'" aria-label="Horas"><input class="field field-sm" id="fScreenM" data-f="screenM" type="number" inputmode="numeric" min="0" max="59" placeholder="minutos" value="'+sm+'" aria-label="Minutos"></div>'+
       '<div id="screenStatus" class="nudge" style="margin-top:10px;padding:10px 14px">'+screenStatusHTML()+'</div>'+
       '<label class="flabel" for="fWin" style="margin-top:14px">Maior vitória do dia</label><input class="field field-sm" id="fWin" data-f="win" maxlength="120" value="'+esc(lg.win)+'" placeholder="Até uma coisa pequena conta">'+
-      '<label class="flabel" for="fNext" style="margin-top:14px">Amanhã eu começo por</label><input class="field field-sm" id="fNext" data-f="next" maxlength="120" value="'+esc(lg.next)+'" placeholder="Uma ação concreta para começar o dia">';
+      '<label class="flabel" for="fNext" style="margin-top:14px">Amanhã eu começo por</label><input class="field field-sm" id="fNext" data-f="next" maxlength="120" value="'+esc(lg.next)+'" placeholder="Uma ação concreta para começar o dia">'+
+      pushSettingsHTML();
     return;
   }
   var days=lastDays(7),prev=lastDays(7,addDays(k,-7));

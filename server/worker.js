@@ -99,6 +99,24 @@ export default {
       }
     }
 
+    // POST /unsubscribe - Remove inscrição do banco
+    if (url.pathname === '/unsubscribe' && request.method === 'POST') {
+      try {
+        const data = await request.json();
+        const sub = data.subscription || data;
+        if (sub && sub.endpoint) {
+          const endpointHash = btoa(sub.endpoint).slice(-32).replace(/[^a-zA-Z0-9]/g, '');
+          const key = `sub:${endpointHash}`;
+          if (env.SUBSCRIPTIONS) {
+            await env.SUBSCRIPTIONS.delete(key);
+          }
+        }
+        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders() });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders() });
+      }
+    }
+
     // POST /test - Dispara notificação de teste imediatamente
     if (url.pathname === '/test' && request.method === 'POST') {
       const res = await sendPushToAll(env, {

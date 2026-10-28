@@ -107,6 +107,43 @@ export async function subscribeWebPush(customServerUrl) {
   }
 }
 
+export async function unsubscribeWebPush() {
+  try {
+    toast('Desativando notificações...');
+    if ('serviceWorker' in navigator) {
+      var reg = await navigator.serviceWorker.ready;
+      var sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        var server = (S.pushServerUrl || DEFAULT_PUSH_SERVER).trim().replace(/\/+$/, '');
+        if (server) {
+          try {
+            await fetch(server + '/unsubscribe', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ subscription: sub })
+            });
+          } catch(e) {
+            console.warn('Erro ao notificar servidor sobre cancelamento:', e);
+          }
+        }
+        await sub.unsubscribe();
+      }
+    }
+    S.pushSubscribed = false;
+    save();
+    toast('🔕 Notificações desativadas.');
+    render();
+    return true;
+  } catch (err) {
+    console.warn('Erro ao desativar notificações:', err);
+    S.pushSubscribed = false;
+    save();
+    toast('Notificações desativadas.');
+    render();
+    return false;
+  }
+}
+
 export async function sendTestPush(customServerUrl) {
   var server = (customServerUrl || S.pushServerUrl || DEFAULT_PUSH_SERVER).trim().replace(/\/+$/, '');
   if (!server) {
@@ -189,21 +226,24 @@ export function pushSettingsHTML() {
   var sub = !!S.pushSubscribed;
   var lockAudio = S.lockScreenAudio !== false;
 
-  return '<div class="sec" style="margin-top:20px;padding:16px 14px;border:1px solid var(--edge);border-radius:12px;background:var(--sub)">' +
+  return '<div class="sec" style="margin-top:20px;padding:16px 14px;border:1px solid var(--line);border-radius:18px;background:var(--surface)">' +
     '<h3 style="display:flex;align-items:center;justify-content:space-between;margin:0 0 8px 0">' +
-      '<span>🔔 Notificações no iPhone</span>' +
-      (sub ? '<span class="tag">Ativo</span>' : '') +
+      '<span>🔔 Notificações Inteligentes</span>' +
+      (sub ? '<span class="tag" style="margin-left:auto;background:var(--sea-soft);color:var(--sea);border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700">Ligadas</span>' : '<span class="tag" style="margin-left:auto;background:var(--line);color:var(--muted);border-radius:99px;padding:2px 10px;font-size:12px">Desligadas</span>') +
     '</h3>' +
-    '<p class="muted small">Receba o lembrete da revisão às 21h e alertas de foco mesmo com o app fechado no iPhone.</p>' +
+    '<p class="muted small">Lembretes para pausas, foco e revisão mesmo com o app fechado no iPhone.</p>' +
     
     '<div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">' +
       '<div class="row" style="margin-top:4px">' +
-        '<button class="btn small" data-act="push-connect">' + (sub ? '✓ Notificações Conectadas' : 'Ativar Notificações no iPhone') + '</button>' +
-        '<button class="btn quiet small" data-act="push-test">Testar Agora</button>' +
+        (sub 
+          ? '<button class="btn quiet small" data-act="push-disconnect" style="color:var(--danger)">Desligar Notificações</button>' +
+            '<button class="btn quiet small" data-act="push-test">Testar Agora</button>'
+          : '<button class="btn small" data-act="push-connect">Ativar Notificações no iPhone</button>'
+        ) +
       '</div>' +
     '</div>' +
 
-    '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--edge)">' +
+    '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line)">' +
       '<div style="display:flex;align-items:center;justify-content:space-between">' +
         '<div>' +
           '<b>Contador na tela bloqueada</b>' +

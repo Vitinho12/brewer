@@ -5,7 +5,7 @@ import { render } from './app.js';
 /* ---------- Google Agenda (OAuth via Google Identity Services + Calendar API v3) ---------- */
 export var Integrations={googleCalendar:{
   origin:'https://vitinho12.github.io',
-  clientId:'',   /* opcional: pode ficar vazio e ser colado na tela Agenda */
+  clientId:'559268929436-vvaltsjeietmvhh2uor7m51asmn4u8a9.apps.googleusercontent.com',
   scopes:[
     'https://www.googleapis.com/auth/calendar.events',
     'https://www.googleapis.com/auth/calendar.readonly'
@@ -24,8 +24,8 @@ export function gcCfg(){
   if(!c.extraCals)c.extraCals=[];
   if(!c.selectedCals)c.selectedCals=['primary'];
   if(!c.availableCals)c.availableCals=[];
-  if(c.clientId===undefined)c.clientId=GC.clientId||'';
-  if(!c.status)c.status=c.clientId?'ready':'off';
+  c.clientId=c.clientId||GC.clientId||'';
+  if(!c.status||(c.status==='off'&&c.clientId))c.status=c.clientId?'ready':'off';
   return c;
 }
 export function gcGisReady(){return !!(window.google&&google.accounts&&google.accounts.oauth2)}

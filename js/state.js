@@ -1,4 +1,5 @@
 import { $, esc, pl, uid, today, parseKey, addDays, toMin, fromMin, fmtHM, mondayOf, CHECK } from './utils.js';
+import { setAmbienceMedia, stopAmbienceMedia } from './media.js';
 
 export var KEY='brewer.v1';
 
@@ -63,27 +64,14 @@ export function archiveFocus(){var f=S.focus;if(!f||f.mode==='focus')return;S.la
 /* ---------- avisos, som ambiente, tela ligada e modal ---------- */
 var lock=null;
 export function holdScreen(){if(!S.keepAwake)return;try{if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){lock=l}).catch(function(){})}}catch(e){}}
-export function releaseLock(){try{if(lock)lock.release()}catch(e){}lock=null;stopAmbience()}
+export function releaseLock(){try{if(lock)lock.release()}catch(e){}lock=null;if(!S.focus||(S.focus.mode!=='focus'&&S.focus.mode!=='break'))stopAmbience()}
 
-var ambAudio=null;
+
 export function stopAmbience(){
-  UI.amb='off';
-  try{if(ambAudio){ambAudio.pause();ambAudio.currentTime=0}}catch(e){}
-  ambAudio=null;
+  stopAmbienceMedia();
 }
 export function setAmbience(mode){
-  stopAmbience();
-  if(!mode||mode==='off')return;
-  try{
-    var src=mode==='cafe'?'assets/audio/cafe.mp3':'assets/audio/rain.mp3';
-    var a=new Audio(src);
-    a.loop=true;
-    a.volume=mode==='cafe'?0.65:0.55;
-    var p=a.play();
-    if(p&&p.catch)p.catch(function(){});
-    ambAudio=a;
-    UI.amb=mode;
-  }catch(e){UI.amb='off'}
+  setAmbienceMedia(mode);
 }
 export function alertUser(){
   try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}

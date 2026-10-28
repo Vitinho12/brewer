@@ -9,6 +9,7 @@ import { WX, WY, startGate, selectFeel, start10m, gateStay, gateOpenApp, gateCon
 import { renderRevisao } from './views/revisao.js';
 import { renderColecao } from './views/colecao.js';
 import { requestNotifyPermission, notifyBreakDone } from './notifications.js';
+import { primeFocusAudio, updateMediaSession, startFocusMedia, stopFocusMedia } from './media.js';
 import { renderJornada, simSession, testAdd, testRem, testSkip, testJump, testClear } from './views/jornada.js';
 
 /* ---------- navegação ---------- */
@@ -99,6 +100,7 @@ export function updateLive(){
     var b=$('#focusBar');if(b)b.style.width=Math.max(0,Math.min(100,(1-rem/(f.total*1000))*100))+'%';
     var rt=$('#runTime');if(rt)rt.textContent=mmss(rem);
     title=(f.pausedAt?'Pausa · ':'')+mmss(rem)+' · Brewer';
+    updateMediaSession(f);
   }
   if(s&&s.phase==='gate'){
     var grem=Math.max(0,s.end-now);
@@ -247,8 +249,8 @@ document.addEventListener('click',function(e){
       var cl2=$('#customLabel'),tid=effTaskId(),tk=tid?findTask(tid):null;
       openRitual({mins:S.draft.mins,kind:S.draft.kind,taskId:tid,label:tk?tk.text:((cl2&&cl2.value.trim())||'Foco livre'),cat:effCat()||'Sem categoria',src:'manual'});break;
     case 'pre-kind':if(UI.pre){UI.pre.cfg.kind=el.dataset.v==='parcial'?'parcial':'total';render()}break;
-    case 'pre-go':if(UI.pre){UI.pre.step='v60';clearTimeout(UI.preTimer);UI.preTimer=setTimeout(beginFocus,2400);render()}break;
-    case 'pre-skip':clearTimeout(UI.preTimer);beginFocus();break;
+    case 'pre-go':if(UI.pre){primeFocusAudio(UI.amb);UI.pre.step='v60';clearTimeout(UI.preTimer);UI.preTimer=setTimeout(beginFocus,2400);render()}break;
+    case 'pre-skip':primeFocusAudio(UI.amb);clearTimeout(UI.preTimer);beginFocus();break;
     case 'pre-back':clearTimeout(UI.preTimer);UI.pre=null;go('hoje');break;
     case 'end-partial':endPartial();break;
     case 'sg-place':var sp=UI.sg[+el.dataset.i];if(sp){placeSuggestion(UI.sgDay,sp);toast('Colocado na agenda.');render();plannerSheet(UI.sgDay)}break;
@@ -279,8 +281,8 @@ document.addEventListener('click',function(e){
       if(S.focus){t=findTask(S.focus.taskId);if(t){setDone(t,true)}S.focus.taskId=''}
       save();render();break;
     case 'more-block':startFocus(25,{taskId:S.focus?S.focus.taskId:'',label:S.focus?S.focus.label:''});break;
-    case 'start-break':S.focus={mode:'break',taskId:'',label:'Pausa',total:300,startTime:Date.now(),endTime:Date.now()+300000,starter:false};save();render();break;
-    case 'skip-break':S.focus=null;save();go('hoje');break;
+    case 'start-break':S.focus={mode:'break',taskId:'',label:'Pausa',total:300,startTime:Date.now(),endTime:Date.now()+300000,starter:false};startFocusMedia(S.focus);save();render();break;
+    case 'skip-break':S.focus=null;stopFocusMedia(false);save();go('hoje');break;
     case 'feel':selectFeel(el.dataset.v);break;
     case 'start-10m':start10m();break;
     case 'gate-stay':gateStay();break;

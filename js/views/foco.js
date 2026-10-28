@@ -2,6 +2,15 @@ import { $, esc, pl, mmss, uid, today, fmtHM, fmtDur, seg } from '../utils.js';
 import { S, UI, L, save, cmp, findTask, archiveFocus, CUP_ASSETS, cupMeta, cupImg, pickModel, addCup, cupShow, v60CarafeSVG, holdScreen, releaseLock, setAmbience, alertUser, toast, openSheet, closeSheet } from '../state.js';
 import { render, go } from '../app.js';
 import { notifyFocusDone, notifyBreakDone, notifyAwayWarning, notifyPermission } from '../notifications.js';
+import { setupMediaHandlers, startFocusMedia, pauseFocusMedia, resumeFocusMedia, completeFocusMedia, stopFocusMedia, updateMediaSession } from '../media.js';
+
+/* Conecta as ações da tela bloqueada (Play/Pause/Concluir) aos métodos de foco do Brewer */
+setupMediaHandlers({
+  onPlay: function() { resumeFocus(); },
+  onPause: function() { pauseFocus(); },
+  onStop: function() { breakFocus('gaveup'); },
+  onComplete: function() { completeFocus(); }
+});
 
 /* ---------- foco: motor baseado em timestamps ---------- */
 export var AWAY_ASK_MS=15000,EMERGENCY_MAX_MS=10*60000;
@@ -19,7 +28,7 @@ export function breakFocus(reason,away){
   f.mode='failed';f.cupId=c?c.id:'';delete f.hiddenAt;delete f.pausedAt;
   f.msg=reason==='phone'?'Você usou o celular durante o bloco ('+fmtAway(away)+' fora). A interrupção foi registrada.':reason==='pause'?'A pausa de emergência passou de 10 minutos.':'Você desistiu do bloco.';
   if(reason==='phone')S.interruptions.push({t:Date.now(),type:'phone',mins:Math.max(1,Math.round(away/60000)),cat:f.cat||'',label:f.label});
-  releaseLock();save();render();
+  releaseLock();stopFocusMedia(false);save();render();
   if(S.tab!=='foco'&&S.tab!=='hoje')toast('O foco foi interrompido e a xícara quebrou.');
 }
 export function completeFocus(){
@@ -28,7 +37,7 @@ export function completeFocus(){
   logFocus(mins,f);
   var c=cupWorthy(mins,f)?addCup(true,f,f.test):null;if(c)f.cupId=c.id;
   logSession(f,mins,true,c);
-  f.mode='done';delete f.hiddenAt;alertUser();releaseLock();save();render();
+  f.mode='done';delete f.hiddenAt;alertUser();releaseLock();completeFocusMedia(f);save();render();
   notifyFocusDone(mins, f.label);
 }
 /* foco parcial: encerrar antes registra o tempo real, sem punição */
@@ -36,11 +45,11 @@ export function endPartial(){
   var f=S.focus;if(!f||f.mode!=='focus'||f.kind!=='parcial')return;
   var ref=f.pausedAt||Date.now(),mins=Math.floor(Math.max(0,ref-f.startTime-(f.pauseMs||0))/60000);
   if(f.test&&mins<1)mins=1;
-  if(mins<1){S.focus=null;releaseLock();save();render();toast('Menos de 1 minuto: nada foi registrado.');return}
+  if(mins<1){S.focus=null;releaseLock();stopFocusMedia(false);save();render();toast('Menos de 1 minuto: nada foi registrado.');return}
   f.mins=mins;logFocus(mins,f);
   var c=cupWorthy(mins,f)?addCup(true,f,f.test):null;if(c)f.cupId=c.id;
   logSession(f,mins,true,c);
-  f.early=true;f.mode='done';delete f.hiddenAt;delete f.pausedAt;releaseLock();save();render();
+  f.early=true;f.mode='done';delete f.hiddenAt;delete f.pausedAt;releaseLock();completeFocusMedia(f);save();render();
 }
 export function checkReturn(){
   var f=S.focus;
@@ -58,14 +67,14 @@ export function answerReturn(a){
   else if(a==='phone')breakFocus('phone',away);
   else breakFocus('gaveup');
 }
-export function pauseFocus(){var f=S.focus;if(!f||f.mode!=='focus'||f.pausedAt)return;f.pausedAt=Date.now();delete f.hiddenAt;releaseLock();save();render()}
+export function pauseFocus(){var f=S.focus;if(!f||f.mode!=='focus'||f.pausedAt)return;f.pausedAt=Date.now();delete f.hiddenAt;releaseLock();pauseFocusMedia();save();render()}
 export function resumeFocus(){
   var f=S.focus;if(!f||!f.pausedAt)return;
   var now=Date.now(),d=now-f.pausedAt;
-  if(f.kind==='parcial'){f.endTime+=d;f.pauseMs=(f.pauseMs||0)+d;delete f.pausedAt;delete f.hiddenAt;holdScreen();save();render();return}
+  if(f.kind==='parcial'){f.endTime+=d;f.pauseMs=(f.pauseMs||0)+d;delete f.pausedAt;delete f.hiddenAt;holdScreen();resumeFocusMedia();save();render();return}
   S.interruptions.push({t:now,type:'emergency',mins:Math.max(1,Math.round(d/60000)),cat:f.cat||'',label:f.label});
   if(d>EMERGENCY_MAX_MS){breakFocus('pause');return}
-  f.endTime+=d;f.pauseMs=(f.pauseMs||0)+d;delete f.pausedAt;delete f.hiddenAt;holdScreen();save();render();
+  f.endTime+=d;f.pauseMs=(f.pauseMs||0)+d;delete f.pausedAt;delete f.hiddenAt;holdScreen();resumeFocusMedia();save();render();
 }
 export function interruptLine(){
   var from=Date.now()-7*864e5,a=S.interruptions.filter(function(x){return x.t>=from});
@@ -175,7 +184,7 @@ export function startFocus(mins,opts){
   var tot=Math.max(1,Math.round(mins*60));
   S.focus={mode:'focus',kind:opts.kind==='parcial'?'parcial':'total',src:opts.src||'manual',blockId:opts.blockId||'',blockDay:opts.blockDay||'',ext:opts.ext||'',taskId:t?t.id:'',label:opts.label||(t?t.text:(custom||'Foco livre')),total:tot,startTime:Date.now(),endTime:Date.now()+tot*1000,model:pickModel(),starter:!!opts.starter,test:mins<1,cat:(opts.cat!==undefined?opts.cat:(opts.taskId!==undefined?(t&&t.cat)||'':effCat()))||'Sem categoria'};
   UI.giveUp=false;UI.pre=null;clearTimeout(UI.preTimer);
-  holdScreen();save();go('foco');
+  holdScreen();startFocusMedia(S.focus);save();go('foco');
 }
 export function durHTML(){
   var m=S.draft.mins;
@@ -250,6 +259,7 @@ export function activeFocusHTML(){
       (paused?'':ambienceHTML())+
       (paused?'':(notifyPermission()==='default'?'<div style="margin-top:12px"><button class="btn quiet small" style="min-height:30px;font-size:12px;padding:0 12px" data-act="notify-enable">🔔 Ativar alertas de término</button></div>':'<p class="muted small" style="font-size:11px;margin-top:10px">🔔 Alerta ativado ao terminar</p>'))+
       (paused?'':'<p class="muted small" style="margin-top:14px">'+(f.kind==='parcial'?'Modo flexível: sair não quebra a xícara.':'Pode bloquear a tela. Sair para outro app interrompe o foco.')+'</p>')+
+      (paused?'':'<p class="muted small" style="font-size:11px;margin-top:6px;opacity:.8">📱 Contador e controles ativos na tela bloqueada</p>')+
       '<div style="margin-top:22px">'+btns+sim+'</div>'+
     '</div>';
   }

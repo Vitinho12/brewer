@@ -1,6 +1,6 @@
 import { $, mmss, uid, today, addDays, toMin, nowMin, fmtShort, mondayOf } from './utils.js';
 import { S, UI, SH, resetState, save, L, cmp, findTask, normTask, setDone, planned, setPlan, archiveFocus, currentGoal, updateTheme, screenStatusHTML, CUP_ASSETS, cupMeta, addCup, cupFallback, heroFallbackHTML, holdScreen, releaseLock, setAmbience, alertUser, toast, closeSheet } from './state.js';
-import { gcCfg, gcResetToken, gcRun, gcDiag, gcDisconnect, mdSync, mdFile, confirmInbox, ignoreInbox } from './sync.js';
+import { gcCfg, gcResetToken, gcRun, gcDiag, gcDisconnect, gcToggleCal, gcReloadCals, mdSync, mdFile, confirmInbox, ignoreInbox } from './sync.js';
 import { renderHoje, prioSheet } from './views/hoje.js';
 import { suggestionsFor, placeSuggestion, plannerSheet, blockSheet, PRESETS, dayChips, routineSheet, renderAgenda } from './views/agenda.js';
 import { prioChips, applyPhrase, startVoice, readForm, taskSheet, inboxSheet, renderTarefas } from './views/tarefas.js';
@@ -263,6 +263,9 @@ document.addEventListener('click',function(e){
     case 'gc-diag':gcDiag();break;
     case 'gc-switch':UI.gcSelect=true;gcResetToken(true);gcRun();break;
     case 'gc-disconnect':gcDisconnect();break;
+    case 'gc-toggle-cal':gcToggleCal(id,false);break;
+    case 'gc-toggle-md':gcToggleCal(id,true);break;
+    case 'gc-reload-cals':gcReloadCals();break;
     case 'give-up':UI.giveUp=true;render();break;
     case 'stop-focus':UI.giveUp=false;breakFocus('gaveup');break;
     case 'pause':pauseFocus();break;

@@ -6,7 +6,10 @@ import { render } from './app.js';
 export var Integrations={googleCalendar:{
   origin:'https://vitinho12.github.io',
   clientId:'',   /* opcional: pode ficar vazio e ser colado na tela Agenda */
-  scopes:['https://www.googleapis.com/auth/calendar.events'],
+  scopes:[
+    'https://www.googleapis.com/auth/calendar.events',
+    'https://www.googleapis.com/auth/calendar.readonly'
+  ],
   windowDays:{back:7,ahead:30}
 }};
 export var GC=Integrations.googleCalendar;
@@ -15,7 +18,13 @@ var gcTok=null,gcExp=0,gcGisP=null;
 export function gcResetToken(clearExp){gcTok=null;if(clearExp)gcExp=0}
 export function gcCfg(){
   var c=S.integrations.googleCalendar||(S.integrations.googleCalendar={});
-  if(c.push===undefined)c.push=true;if(!c.pendingDelete)c.pendingDelete=[];if(!c.moodleCals)c.moodleCals=[];if(!c.extraCals)c.extraCals=[];if(c.clientId===undefined)c.clientId=GC.clientId||'';
+  if(c.push===undefined)c.push=true;
+  if(!c.pendingDelete)c.pendingDelete=[];
+  if(!c.moodleCals)c.moodleCals=[];
+  if(!c.extraCals)c.extraCals=[];
+  if(!c.selectedCals)c.selectedCals=['primary'];
+  if(!c.availableCals)c.availableCals=[];
+  if(c.clientId===undefined)c.clientId=GC.clientId||'';
   if(!c.status)c.status=c.clientId?'ready':'off';
   return c;
 }
@@ -60,12 +69,71 @@ export function gcFetch(path,opt){
     });
   });
 }
+export function gcFetchCalendars(){
+  return gcFetch('/users/me/calendarList?minAccessRole=reader').then(function(res){
+    var items=(res&&res.items)||[];
+    var cfg=gcCfg();
+    cfg.availableCals=items.map(function(item){
+      return {
+        id:item.id,
+        summary:item.summaryOverride||item.summary||item.id,
+        primary:!!item.primary,
+        bg:item.backgroundColor||'#7B4F2E',
+        fg:item.foregroundColor||'#ffffff',
+        accessRole:item.accessRole||'reader'
+      };
+    });
+    if(!cfg.selectedCals||!cfg.selectedCals.length){
+      var def=['primary'];
+      (cfg.extraCals||[]).forEach(function(ec){if(def.indexOf(ec)<0)def.push(ec)});
+      cfg.selectedCals=def;
+    }
+    save();
+    return cfg.availableCals;
+  });
+}
+export function gcToggleCal(id,isMoodle){
+  var cfg=gcCfg();
+  if(isMoodle){
+    if(!cfg.moodleCals)cfg.moodleCals=[];
+    var mix=cfg.moodleCals.indexOf(id);
+    if(mix>-1)cfg.moodleCals.splice(mix,1);
+    else cfg.moodleCals.push(id);
+  }else{
+    if(!cfg.selectedCals)cfg.selectedCals=['primary'];
+    var ix=cfg.selectedCals.indexOf(id);
+    if(ix>-1){
+      if(cfg.selectedCals.length>1)cfg.selectedCals.splice(ix,1);
+      else toast('Mantenha pelo menos um calendário selecionado.');
+    }else{
+      cfg.selectedCals.push(id);
+    }
+  }
+  save();
+  render();
+}
+export function gcReloadCals(){
+  if(UI.gcBusy)return;
+  UI.gcBusy=true;render();
+  gcFetchCalendars().then(function(cals){
+    UI.gcBusy=false;
+    toast(pl(cals.length,'calendário encontrado','calendários encontrados')+'.');
+    render();
+  },function(e){
+    UI.gcBusy=false;
+    UI.gcErr=gcMsg(e);
+    render();
+  });
+}
 export function gcSync(){
   var cfg=gcCfg(),from=addDays(today(),-GC.windowDays.back),to=addDays(today(),GC.windowDays.ahead);
   var tz=(window.Intl&&Intl.DateTimeFormat().resolvedOptions().timeZone)||'America/Sao_Paulo';
   var res={imp:0,created:0,deleted:0,skipped:0};
   var seq=function(arr,fn){return arr.reduce(function(p,x){return p.then(function(){return fn(x)})},Promise.resolve())};
   return gcToken().then(function(){
+    /* atualiza lista de calendários se possível */
+    return gcFetchCalendars().catch(function(){});
+  }).then(function(){
     /* 1) apaga no Google o que foi removido aqui */
     return seq((cfg.pendingDelete||[]).slice(),function(id){
       return gcFetch('/calendars/primary/events/'+encodeURIComponent(id),{method:'DELETE'}).then(function(){res.deleted++},function(e){if(e.status!==404&&e.status!==410)throw e})
@@ -97,7 +165,8 @@ export function gcSync(){
     };
     var got=[];res.cals=[];res.calErrors=[];
     var mdSet={};(cfg.moodleCals||[]).forEach(function(c){mdSet[c]=1});
-    var calList=['primary'];(cfg.extraCals||[]).concat(cfg.moodleCals||[]).forEach(function(c){if(calList.indexOf(c)<0)calList.push(c)});
+    var calList=(cfg.selectedCals&&cfg.selectedCals.length)?cfg.selectedCals.slice():['primary'];
+    (cfg.extraCals||[]).concat(cfg.moodleCals||[]).forEach(function(c){if(calList.indexOf(c)<0)calList.push(c)});
     return calList.reduce(function(p,cid){
       return p.then(function(){
         return listCal(cid).then(function(x){got=got.concat(x.items);res.cals.push({id:cid,name:x.meta.name,tz:x.meta.tz,n:x.items.length,md:!!mdSet[cid]})},function(e){
@@ -209,10 +278,37 @@ export function gcalPanelHTML(){
   h+='<div class="row">'+(UI.gcBusy?'<button class="btn small" disabled>Sincronizando...</button>':'<button class="btn small" data-act="gc-sync">'+(cfg.status==='connected'?'Sincronizar agora':'Conectar e sincronizar')+'</button>');
   if(cfg.status==='connected'&&!UI.gcBusy)h+='<button class="btn quiet small" data-act="gc-diag">Diagnosticar</button><button class="btn quiet small" data-act="gc-switch">Trocar conta do Google</button><button class="btn quiet small" data-act="gc-disconnect">Desconectar</button>';
   h+='</div><label class="check-row"><input type="checkbox" id="gcPush"'+(cfg.push?' checked':'')+'> Enviar os blocos do Brewer para o Google</label>'+
-    '<p class="small muted">Eventos do Google aparecem na agenda com a marca Google e são editados lá. Blocos criados no Brewer viram eventos no Google.</p>'+
-    '<label class="flabel" for="gcExtra" style="margin-top:16px">Outros calendários (opcional)</label><input class="field" id="gcExtra" value="'+esc((cfg.extraCals||[]).join(', '))+'" placeholder="IDs separados por vírgula" autocomplete="off" autocapitalize="off" spellcheck="false"><p class="small muted" style="margin-top:6px">Se seus compromissos estão em outro calendário, cole o ID dele (somente leitura). No Google Agenda, no computador: Configurações, escolha o calendário, &ldquo;Integrar agenda&rdquo;, &ldquo;ID da agenda&rdquo;.</p>'+
-    '<label class="flabel" for="gcMoodle" style="margin-top:16px">Calendários do Moodle (opcional)</label><input class="field" id="gcMoodle" value="'+esc((cfg.moodleCals||[]).join(', '))+'" placeholder="IDs separados por vírgula" autocomplete="off" autocapitalize="off" spellcheck="false"><p class="small muted" style="margin-top:6px">Cole o ID do calendário em que você assinou o link do Moodle. Os eventos dele aparecem na Agenda e também em Tarefas, Faculdade, Novos, para você confirmar, editar ou ignorar. Não precisa repetir o ID em &ldquo;Outros calendários&rdquo;.</p>'+
-    '<div class="row" style="margin-top:6px"><button class="ghost small" data-act="gc-change-id">Trocar Client ID</button></div></div>';
+    '<p class="small muted">Eventos do Google aparecem na agenda com a marca Google e são editados lá. Blocos criados no Brewer viram eventos no Google.</p>';
+
+  if(cfg.status==='connected'){
+    if(cfg.availableCals&&cfg.availableCals.length){
+      h+='<div style="margin-top:18px"><label class="flabel" style="margin-bottom:4px">Seus calendários do Google</label>'+
+        '<p class="small muted" style="margin-bottom:10px">Marque quais você quer sincronizar na agenda do Brewer:</p>'+
+        '<div style="display:grid;gap:8px">'+
+        cfg.availableCals.map(function(c){
+          var sel=(cfg.selectedCals||['primary']).indexOf(c.id)>-1||(c.primary&&(cfg.selectedCals||[]).indexOf('primary')>-1);
+          var isMd=(cfg.moodleCals||[]).indexOf(c.id)>-1;
+          return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px">'+
+            '<label style="display:flex;align-items:center;gap:10px;cursor:pointer;flex:1;min-width:0">'+
+              '<input type="checkbox" data-act="gc-toggle-cal" data-id="'+esc(c.id)+'"'+(sel?' checked':'')+' style="width:18px;height:18px;accent-color:var(--sea);flex:none">'+
+              '<span style="width:10px;height:10px;border-radius:50%;background:'+esc(c.bg)+';flex:none"></span>'+
+              '<span style="font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(c.summary)+(c.primary?' <span class="muted small">(Principal)</span>':'')+'</span>'+
+            '</label>'+
+            '<button class="ghost small" data-act="gc-toggle-md" data-id="'+esc(c.id)+'" style="font-size:12px;padding:3px 8px;border-radius:8px;background:'+(isMd?'var(--sea-soft)':'transparent')+';color:'+(isMd?'var(--ink)':'var(--muted)')+';flex:none;margin-left:8px">'+(isMd?'Moodle ✓':'Moodle')+'</button>'+
+          '</div>';
+        }).join('')+
+        '</div><div class="row" style="margin-top:8px"><button class="ghost small" data-act="gc-reload-cals">Atualizar lista de calendários</button></div></div>';
+    } else {
+      h+='<div class="nudge small" style="margin-top:16px"><p>Quer escolher quais calendários puxar?</p><div class="row" style="margin-top:8px"><button class="btn quiet small" data-act="gc-reload-cals">Buscar meus calendários do Google</button></div></div>';
+    }
+  }
+
+  h+='<details style="margin-top:20px;font-size:13px;color:var(--muted)">'+
+    '<summary style="cursor:pointer;padding:6px 0;font-weight:600">Configurações manuais de ID (avançado)</summary>'+
+    '<label class="flabel" for="gcExtra" style="margin-top:10px">Outros calendários (IDs manuais)</label><input class="field" id="gcExtra" value="'+esc((cfg.extraCals||[]).join(', '))+'" placeholder="IDs separados por vírgula" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<label class="flabel" for="gcMoodle" style="margin-top:14px">Calendários do Moodle (IDs manuais)</label><input class="field" id="gcMoodle" value="'+esc((cfg.moodleCals||[]).join(', '))+'" placeholder="IDs separados por vírgula" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<div class="row" style="margin-top:8px"><button class="ghost small" data-act="gc-change-id">Trocar Client ID</button></div>'+
+  '</details></div>';
   return h;
 }
 export function gcMoodleReady(){var c=gcCfg();return !!(c.clientId&&c.moodleCals&&c.moodleCals.length)}

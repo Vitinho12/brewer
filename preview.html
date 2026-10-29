@@ -3,305 +3,564 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Brewer - Pote Geisha (Animação de Despejo Real)</title>
+  <title>Brewer - A Mesa da Cafeteria 2.5D (Estilo Forest)</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
-    body {
-      background-color: #120A06;
-      color: #F7EFE6;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    @keyframes gentleSteam {
+      0% { transform: translateY(0) scaleX(1); opacity: 0.15; }
+      50% { transform: translateY(-12px) scaleX(1.25); opacity: 0.55; }
+      100% { transform: translateY(-24px) scaleX(1.45); opacity: 0; }
+    }
+    .steam-anim-1 {
+      animation: gentleSteam 3.4s ease-in-out infinite;
+      transform-box: fill-box;
+      transform-origin: bottom center;
+    }
+    .steam-anim-2 {
+      animation: gentleSteam 2.9s ease-in-out 1.5s infinite;
+      transform-box: fill-box;
+      transform-origin: bottom center;
+    }
+
+    .obj-depth {
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s ease;
+      transform-box: fill-box;
+      transform-origin: center bottom;
+    }
+    .obj-depth:hover {
+      transform: translateY(-8px) scale(1.08);
+      filter: drop-shadow(0 14px 18px rgba(0,0,0,0.65));
     }
   </style>
 </head>
-<body class="min-h-screen p-4 md:p-8 flex flex-col items-center justify-start">
+<body class="bg-[#0e0804] text-[#f6efe4] font-sans antialiased min-h-screen p-3 md:p-6 flex flex-col items-center justify-start">
 
   <!-- Cabeçalho -->
-  <div class="w-full max-w-xl flex flex-col items-center text-center gap-2 mb-6">
-    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#24140B] border border-[#422616] text-xs font-bold tracking-wider text-[#DDA15E] uppercase">
-      ☕ Preview Interativo · Opção B (Animação de Despejo)
+  <div class="w-full max-w-2xl flex flex-col items-center text-center gap-1.5 mb-4">
+    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-[#201209] border border-[#3d2414] text-[11px] font-semibold tracking-wider text-[#d5a368] uppercase">
+      ☕ A Coleção Brewer · O Sentimento do Forest
     </div>
-    <h1 class="text-2xl md:text-3xl font-extrabold text-white tracking-tight">
-      O Silo de Geisha: Grãos Caindo e Assentando
+    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-[#fffaf3]">
+      A Mesa Viva da Cafeteria
     </h1>
-    <p class="text-xs md:text-sm text-[#A89382]">
-      Ao clicar em adicionar foco, os grãos caem do topo em uma rajada rápida, batem no fundo, <strong>se assentam de verdade</strong> e o pote sobe de nível. <strong>Zero grãos congelados no ar!</strong>
+    <p class="text-xs md:text-sm text-[#b8a496] max-w-md">
+      Nada de grades ou caixas quadradas enfileiradas. Aqui você vê <b>uma verdadeira mesa de cafeteria em perspectiva 2.5D</b> sendo ocupada organicamente pelas suas conquistas de foco.
     </p>
+
+    <!-- Alternador de Estilo de Mesa -->
+    <div class="inline-flex p-1 bg-[#1a0f08] border border-[#382012] rounded-xl mt-2 shadow-inner">
+      <button onclick="setMode('oval')" id="btnOval" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#683f21] text-[#fffaf3] transition shadow">
+        🪵 Mesa Redonda de Madeira (2.5D)
+      </button>
+      <button onclick="setMode('iso')" id="btnIso" class="px-3.5 py-1.5 text-xs font-semibold text-[#a89080] hover:text-[#fffaf3] transition">
+        🔷 Ilha Isométrica 3D (Losango Forest)
+      </button>
+    </div>
   </div>
 
-  <!-- CONTAINER DO POTE -->
-  <div class="w-full max-w-sm bg-[#1B1009] border border-[#382012] rounded-3xl p-6 shadow-2xl flex flex-col items-center">
-
-    <!-- CARD DE SESSÃO CONCLUÍDA -->
-    <div class="w-full bg-[#26150C] border border-[#4A2B18] rounded-2xl p-4 mb-4 text-center shadow-inner">
-      <div class="text-[11px] text-[#DDA15E] font-bold uppercase tracking-wider mb-1">
-        ✓ Sessão de Foco Concluída
-      </div>
-      <div class="text-base font-bold text-white mb-2" id="simTitle">
-        Despejar grãos no pote:
-      </div>
-      
-      <!-- BOTÕES DE ADICIONAR FOCO -->
-      <div class="flex flex-wrap gap-2 justify-center">
-        <button onclick="pourBeans(15)" class="px-3 py-1.5 bg-[#381F12] hover:bg-[#4D2B19] active:scale-95 text-xs font-semibold text-white rounded-lg border border-[#522E1A] transition">
-          +15 min (+15g)
-        </button>
-        <button onclick="pourBeans(25)" class="px-4 py-1.5 bg-[#C27E36] hover:bg-[#D98E3E] active:scale-95 text-xs font-bold text-white rounded-lg shadow-md transition">
-          +25 min Pomodoro (+25g)
-        </button>
-        <button onclick="pourBeans(50)" class="px-3 py-1.5 bg-[#381F12] hover:bg-[#4D2B19] active:scale-95 text-xs font-semibold text-white rounded-lg border border-[#522E1A] transition">
-          +50 min (+50g)
-        </button>
-      </div>
-    </div>
-
-    <!-- PALCO DO POTE COM ANIMAÇÃO FÍSICA E NÍVEIS REAIS -->
-    <div class="relative w-[230px] h-[350px] rounded-2xl overflow-hidden bg-[#FAF7F2] border-2 border-[#4A2B18] shadow-lg flex items-center justify-center">
-      
-      <!-- OS ESTÁGIOS REAIS DO POTE COM GRÃOS NO FUNDO -->
-      <img src="preview_assets/geisha_0.png" id="layer-0" class="absolute w-[200px] h-auto transition-opacity duration-500 opacity-100" alt="Pote 0g">
-      <img src="preview_assets/geisha_25.png" id="layer-1" class="absolute w-[200px] h-auto transition-opacity duration-500 opacity-0" alt="Pote 25-50g">
-      <img src="preview_assets/geisha_50.png" id="layer-2" class="absolute w-[200px] h-auto transition-opacity duration-500 opacity-0" alt="Pote 50-125g">
-      <img src="preview_assets/geisha_75.png" id="layer-3" class="absolute w-[200px] h-auto transition-opacity duration-500 opacity-0" alt="Pote 125-190g">
-      <img src="preview_assets/geisha_100.png" id="layer-4" class="absolute w-[200px] h-auto transition-opacity duration-500 opacity-0" alt="Pote 250g">
-
-      <!-- CANVAS PARA A CHUVA DE GRÃOS CAINDO E QUICANDO -->
-      <canvas id="fallingCanvas" width="230" height="350" class="absolute inset-0 pointer-events-none z-10"></canvas>
-
-      <!-- SELO COMEMORATIVO AO COMPLETAR 250G -->
-      <div id="fullBadge" class="absolute inset-0 bg-black/40 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-500">
-        <div class="text-4xl mb-1">🎉</div>
-        <div class="text-xs font-bold text-[#DDA15E] tracking-wider uppercase">Safra Concluída</div>
-        <div class="text-lg font-black text-white">250g Geisha</div>
-        <div class="text-[11px] text-[#F4EADA] mt-1 bg-[#8F5520] px-3 py-1 rounded-full">Lacre Fechado</div>
-      </div>
-    </div>
-
-    <!-- PAINEL DE MÉTRICAS -->
-    <div class="w-full text-center mt-5">
-      <div class="text-4xl font-extrabold text-white tracking-tight">
-        <span id="txtGrams">0</span><span class="text-lg text-[#DDA15E] ml-1">g</span>
-      </div>
-      <div class="text-xs text-[#A89382] font-semibold mt-1" id="txtDesc">
-        Pote Vazio (0 / 250g)
-      </div>
-
-      <!-- Barra de Progresso -->
-      <div class="w-full max-w-[220px] h-2 bg-[#2D180E] rounded-full mx-auto mt-3 overflow-hidden border border-[#452716]">
-        <div id="barFill" class="h-full bg-gradient-to-r from-[#C27E36] to-[#E5A863] rounded-full transition-all duration-300 w-0"></div>
-      </div>
-    </div>
-
-    <!-- CONTROLES RÁPIDOS / RESET -->
-    <div class="w-full flex items-center justify-center gap-2 mt-5 pt-4 border-t border-[#2E170C]">
-      <button onclick="setDirect(0)" class="px-2.5 py-1 text-[11px] font-semibold text-[#A89382] hover:text-white bg-[#26150C] rounded border border-[#3D2111]">
-        0g
+  <!-- Barra de Filtro de Período (Hoje / Semana / Mês) -->
+  <div class="w-full max-w-2xl flex items-center justify-between gap-2 mb-3 px-1">
+    <div class="flex items-center gap-1 bg-[#180e07] border border-[#331c0e] p-1 rounded-xl">
+      <button onclick="loadPreset('hoje')" id="tabHoje" class="px-3 py-1 text-xs font-bold rounded-lg bg-[#502e17] text-[#fffaf3] transition">
+        Hoje (4)
       </button>
-      <button onclick="setDirect(50)" class="px-2.5 py-1 text-[11px] font-semibold text-[#A89382] hover:text-white bg-[#26150C] rounded border border-[#3D2111]">
-        50g
+      <button onclick="loadPreset('semana')" id="tabSemana" class="px-3 py-1 text-xs font-semibold text-[#9c8677] hover:text-[#fffaf3] transition">
+        Esta Semana (8)
       </button>
-      <button onclick="setDirect(125)" class="px-2.5 py-1 text-[11px] font-semibold text-[#A89382] hover:text-white bg-[#26150C] rounded border border-[#3D2111]">
-        125g
-      </button>
-      <button onclick="setDirect(250)" class="px-2.5 py-1 text-[11px] font-semibold text-[#A89382] hover:text-white bg-[#26150C] rounded border border-[#3D2111]">
-        250g
-      </button>
-      <button onclick="resetJar()" class="px-2.5 py-1 text-[11px] font-semibold text-[#E76F51] hover:text-red-400 bg-[#26150C] rounded border border-[#481E15] ml-2">
-        ↺ Zerar
+      <button onclick="loadPreset('mes')" id="tabMes" class="px-3 py-1 text-xs font-semibold text-[#9c8677] hover:text-[#fffaf3] transition">
+        Este Mês (14)
       </button>
     </div>
 
+    <button onclick="resetTable()" class="px-2.5 py-1 bg-transparent hover:bg-[#25160d] border border-[#3d2414] text-xs font-medium rounded-lg text-[#8f796a] transition">
+      🧹 Limpar Mesa
+    </button>
+  </div>
+
+  <!-- Controles Interativos de Simulação -->
+  <div class="w-full max-w-2xl bg-[#160d07] border border-[#301a0d] rounded-2xl p-2.5 mb-3 shadow-xl flex items-center justify-between gap-1.5 flex-wrap">
+    <div class="flex items-center gap-1.5 flex-wrap">
+      <span class="text-[11px] text-[#9c8677] font-semibold mr-0.5">Adicionar:</span>
+      <button onclick="addCoffee('coado')" class="px-2.5 py-1 bg-[#5e381c] hover:bg-[#744724] border border-[#8f562b] text-xs font-bold rounded-lg text-[#fffaf3] transition shadow">
+        ☕ Coado (30m)
+      </button>
+      <button onclick="addCoffee('espresso')" class="px-2.5 py-1 bg-[#25170d] hover:bg-[#382214] border border-[#482b19] text-xs font-semibold rounded-lg text-[#ecd7bf] transition">
+        ⚡ Espresso (15m)
+      </button>
+      <button onclick="addCoffee('chemex')" class="px-2.5 py-1 bg-[#25170d] hover:bg-[#382214] border border-[#482b19] text-xs font-semibold rounded-lg text-[#ecd7bf] transition">
+        👑 Chemex (60m)
+      </button>
+      <button onclick="addCoffee('quebrado')" class="px-2.5 py-1 bg-[#301310] hover:bg-[#441a17] border border-[#6b2822] text-xs font-semibold rounded-lg text-[#fca59b] transition">
+        💔 Quebrar & Derramar
+      </button>
+    </div>
+  </div>
+
+  <!-- PALCO PRINCIPAL DA MESA 2.5D -->
+  <div class="w-full max-w-2xl bg-[#110905] rounded-3xl border-2 border-[#482914] overflow-hidden relative shadow-2xl flex flex-col items-center justify-center min-h-[460px]">
+    
+    <!-- Badge de Resumo no Topo -->
+    <div class="absolute top-3 left-4 z-20 flex items-center gap-2">
+      <span id="sceneSummary" class="px-3 py-1 rounded-full bg-[#180e07]/90 backdrop-blur border border-[#442816] text-xs font-semibold text-[#ebd3bc] shadow">
+        ☕ Carregando mesa...
+      </span>
+    </div>
+
+    <!-- O Canvas SVG da Mesa -->
+    <div id="sceneViewport" class="w-full h-[450px] flex items-center justify-center relative select-none">
+      <!-- O SVG da mesa e das xícaras sobrepostas é injetado aqui dinamicamente -->
+    </div>
+
+    <!-- Legenda de Interatividade no Rodapé do Canvas -->
+    <div class="absolute bottom-2 text-center z-10 pointer-events-none">
+      <span class="text-[10px] text-[#7d695b] tracking-wide">Toque em qualquer café para ver data e foco</span>
+    </div>
+
+  </div>
+
+  <!-- Toast de Detalhe Flutuante -->
+  <div id="cupToast" class="fixed bottom-6 px-4 py-2.5 rounded-xl bg-[#1c0f08]/95 border border-[#52301c] text-xs text-[#fffaf3] shadow-2xl backdrop-blur transition-all duration-300 opacity-0 pointer-events-none translate-y-3 z-50">
+    Detalhes do foco
   </div>
 
   <script>
-    const MAX_CAP = 250;
-    let currentGrams = 0;
-    let isPouring = false;
+    var currentMode = 'oval'; // 'oval' ou 'iso'
+    var currentPeriod = 'hoje';
 
-    // FÍSICA DA QUEDA DOS GRÃOS (CANVAS)
-    const canvas = document.getElementById('fallingCanvas');
-    const ctx = canvas.getContext('2d');
-    let particles = [];
+    // 14 Coordenadas orgânicas com profundidade Z real (fundo é desenhado antes e menor, frente depois e maior)
+    var ovalSpots = [
+      { x: 300, y: 165, scale: 0.86, z: 1 },  // 0: Fundo Centro (ótimo p/ Chemex)
+      { x: 215, y: 175, scale: 0.88, z: 2 },  // 1: Fundo Esquerda-Centro
+      { x: 385, y: 175, scale: 0.88, z: 2 },  // 2: Fundo Direita-Centro
+      { x: 150, y: 195, scale: 0.92, z: 3 },  // 3: Lateral Fundo Esquerda
+      { x: 450, y: 195, scale: 0.92, z: 3 },  // 4: Lateral Fundo Direita
+      { x: 240, y: 215, scale: 0.98, z: 4 },  // 5: Meio Esquerda
+      { x: 360, y: 215, scale: 0.98, z: 4 },  // 6: Meio Direita
+      { x: 300, y: 235, scale: 1.02, z: 5 },  // 7: Centro da Mesa
+      { x: 165, y: 255, scale: 1.05, z: 6 },  // 8: Lateral Frente Esquerda
+      { x: 435, y: 250, scale: 1.05, z: 6 },  // 9: Lateral Frente Direita
+      { x: 235, y: 285, scale: 1.14, z: 7 },  // 10: Frente Esquerda (Hero)
+      { x: 365, y: 280, scale: 1.14, z: 7 },  // 11: Frente Direita (Hero)
+      { x: 295, y: 310, scale: 1.20, z: 8 },  // 12: Frente Centro (Primeiríssimo plano)
+      { x: 300, y: 195, scale: 0.94, z: 3 }   // 13: Centro-Trás
+    ];
 
-    class BeanParticle {
-      constructor(startX, targetY) {
-        this.x = startX;
-        this.y = -10 - (Math.random() * 40);
-        this.vx = (Math.random() - 0.5) * 1.5;
-        this.vy = 4 + Math.random() * 4;
-        this.gravity = 0.55;
-        this.targetY = targetY + (Math.random() * 12 - 6);
-        this.rotation = Math.random() * Math.PI * 2;
-        this.rotSpeed = (Math.random() - 0.5) * 0.3;
-        this.size = 8 + Math.random() * 3;
-        this.alpha = 1;
-        this.landed = false;
-      }
+    var isoSpots = [
+      { x: 300, y: 145, scale: 0.86, z: 1 },  // Vértice Superior Trás
+      { x: 235, y: 180, scale: 0.90, z: 2 },
+      { x: 365, y: 180, scale: 0.90, z: 2 },
+      { x: 180, y: 215, scale: 0.95, z: 3 },
+      { x: 420, y: 215, scale: 0.95, z: 3 },
+      { x: 300, y: 210, scale: 0.98, z: 4 },
+      { x: 140, y: 250, scale: 1.02, z: 5 },
+      { x: 460, y: 250, scale: 1.02, z: 5 },
+      { x: 250, y: 255, scale: 1.06, z: 6 },
+      { x: 350, y: 255, scale: 1.06, z: 6 },
+      { x: 220, y: 295, scale: 1.14, z: 7 },
+      { x: 380, y: 295, scale: 1.14, z: 7 },
+      { x: 300, y: 325, scale: 1.22, z: 8 },  // Vértice Inferior Frente
+      { x: 300, y: 265, scale: 1.08, z: 6 }
+    ];
 
-      update() {
-        if (this.landed) {
-          // Desaparece suavemente após assentar no fundo
-          this.alpha -= 0.08;
-          return;
-        }
+    // Presets realistas para demonstração imediata
+    var presets = {
+      hoje: [
+        { type: 'chemex', name: '👑 Jarra Chemex Barista', label: 'Estudo Profundo · 10:15', mins: 60, spot: 0 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Revisão Artigo · 14:30', mins: 30, spot: 5 },
+        { type: 'espresso', name: '⚡ Espresso Rústico', label: 'Leitura Rápida · 16:45', mins: 15, spot: 11 },
+        { type: 'quebrado', name: '💔 Xícara Trincada', label: 'Interrupção Celular · 18:00', mins: 20, spot: 8 }
+      ],
+      semana: [
+        { type: 'chemex', name: '👑 Jarra Chemex Barista', label: 'Segunda · Foco Profundo', mins: 60, spot: 0 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Terça · Trabalho', mins: 30, spot: 1 },
+        { type: 'espresso', name: '⚡ Espresso Rústico', label: 'Terça · Sprint', mins: 15, spot: 2 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Quarta · Estudo', mins: 30, spot: 6 },
+        { type: 'chemex', name: '👑 Jarra Chemex Barista', label: 'Quinta · Relatório', mins: 60, spot: 7 },
+        { type: 'quebrado', name: '💔 Xícara Trincada', label: 'Quinta · Instagram', mins: 25, spot: 8 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Sexta · Foco', mins: 30, spot: 10 },
+        { type: 'espresso', name: '⚡ Espresso Rústico', label: 'Sábado · Planejamento', mins: 15, spot: 11 }
+      ],
+      mes: [
+        { type: 'chemex', name: '👑 Chemex Barista', label: 'Semana 1 · Deep Work', mins: 60, spot: 0 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Semana 1 · Projeto', mins: 30, spot: 1 },
+        { type: 'espresso', name: '⚡ Espresso Rústico', label: 'Semana 1 · Inbox Zero', mins: 15, spot: 2 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Semana 2 · Código', mins: 30, spot: 3 },
+        { type: 'chemex', name: '👑 Chemex Barista', label: 'Semana 2 · Deep Work', mins: 60, spot: 4 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Semana 2 · Leitura', mins: 30, spot: 5 },
+        { type: 'espresso', name: '⚡ Espresso Rústico', label: 'Semana 3 · Revisão', mins: 15, spot: 6 },
+        { type: 'chemex', name: '👑 Chemex Barista', label: 'Semana 3 · Deep Work', mins: 60, spot: 7 },
+        { type: 'quebrado', name: '💔 Xícara Trincada', label: 'Semana 3 · Desistência', mins: 20, spot: 8 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Semana 3 · Foco', mins: 30, spot: 9 },
+        { type: 'espresso', name: '⚡ Espresso Rústico', label: 'Semana 4 · Sprint', mins: 15, spot: 10 },
+        { type: 'chemex', name: '👑 Chemex Barista', label: 'Semana 4 · Conquista', mins: 60, spot: 11 },
+        { type: 'coado', name: '☕ Coado Terracota', label: 'Semana 4 · Fechamento', mins: 30, spot: 12 },
+        { type: 'espresso', name: '⚡ Espresso Rústico', label: 'Semana 4 · Meta', mins: 15, spot: 13 }
+      ]
+    };
 
-        this.vy += this.gravity;
-        this.x += this.vx;
-        this.y += this.vy;
-        this.rotation += this.rotSpeed;
+    var tableItems = JSON.parse(JSON.stringify(presets.hoje));
 
-        // Bate na superfície dos grãos e assenta!
-        if (this.y >= this.targetY) {
-          this.y = this.targetY;
-          this.landed = true;
-        }
-      }
-
-      draw(ctx) {
-        if (this.alpha <= 0) return;
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, this.alpha);
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rotation);
-
-        // Sombra
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.ellipse(0, 2, this.size, this.size * 0.6, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Corpo do Grão de Café Ilustrado
-        ctx.fillStyle = '#61361F';
-        ctx.beginPath();
-        ctx.ellipse(0, 0, this.size, this.size * 0.65, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // Linha de contorno fina
-        ctx.strokeStyle = '#381C0E';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        // Fenda Central do Grão
-        ctx.strokeStyle = '#2B140A';
-        ctx.lineWidth = 1.3;
-        ctx.beginPath();
-        ctx.moveTo(-this.size * 0.7, 0);
-        ctx.quadraticCurveTo(0, -this.size * 0.25, this.size * 0.7, 0);
-        ctx.stroke();
-
-        // Brilho na casca
-        ctx.fillStyle = 'rgba(255,255,255,0.25)';
-        ctx.beginPath();
-        ctx.arc(-this.size * 0.3, -this.size * 0.2, 1.2, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.restore();
-      }
+    function showToast(text) {
+      var t = document.getElementById('cupToast');
+      t.textContent = text;
+      t.classList.remove('opacity-0', 'translate-y-3');
+      t.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(window.tTimer);
+      window.tTimer = setTimeout(function() {
+        t.classList.remove('opacity-100', 'translate-y-0');
+        t.classList.add('opacity-0', 'translate-y-3');
+      }, 3000);
     }
 
-    function animLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.update();
-        p.draw(ctx);
-        if (p.alpha <= 0) particles.splice(i, 1);
-      }
-      requestAnimationFrame(animLoop);
-    }
-    animLoop();
-
-    // DISPARAR O DESPEJO DE GRÃOS
-    function pourBeans(addAmount) {
-      if (isPouring) return;
-      isPouring = true;
-
-      const oldGrams = currentGrams;
-      const targetGrams = Math.min(MAX_CAP, oldGrams + addAmount);
-      document.getElementById('simTitle').innerText = `Despejando +${addAmount}g no pote...`;
-
-      // Altura da superfície onde os grãos vão bater (de 280px vazio até 120px cheio)
-      const fillRatio = targetGrams / MAX_CAP;
-      const surfaceY = 285 - (fillRatio * 150);
-
-      // Gera rajada de 10 a 14 grãos caindo
-      const count = Math.min(16, Math.max(8, Math.round(addAmount / 2.5)));
-      for (let i = 0; i < count; i++) {
-        setTimeout(() => {
-          // Os grãos caem pelo bocal do vidro (centro)
-          const startX = 115 + (Math.random() * 50 - 25);
-          particles.push(new BeanParticle(startX, surfaceY));
-        }, i * 45);
-      }
-
-      // Conforme os grãos caem, o nível de grãos no fundo sobe
-      setTimeout(() => {
-        currentGrams = targetGrams;
-        updateView();
-      }, 350);
-
-      // Finaliza o despejo (ar fica 100% limpo)
-      setTimeout(() => {
-        isPouring = false;
-        document.getElementById('simTitle').innerText = (currentGrams >= MAX_CAP) 
-          ? '🎉 Pote Completo de 250g!' 
-          : `+${addAmount}g assentados com sucesso!`;
-      }, count * 45 + 500);
-    }
-
-    function setDirect(g) {
-      currentGrams = g;
-      updateView();
-    }
-
-    function updateView() {
-      document.getElementById('txtGrams').innerText = currentGrams;
-      const pct = Math.min(100, (currentGrams / MAX_CAP) * 100);
-      document.getElementById('barFill').style.width = pct + '%';
-
-      let desc = `Pote Vazio (0 / 250g)`;
-      if (currentGrams >= MAX_CAP) {
-        desc = `🎉 POTE COMPLETO! 250g de Geisha colhidas!`;
-      } else if (currentGrams > 0) {
-        const hrs = (currentGrams / 60).toFixed(1);
-        desc = `${currentGrams}g colhidas (~${hrs}h de foco) • ${pct.toFixed(0)}% Cheio`;
-      }
-      document.getElementById('txtDesc').innerText = desc;
-
-      // Troca suave dos estágios reais com grãos no fundo
-      // 0: 0g (vazio)
-      // 1: 1 a 60g (grãos no fundo)
-      // 2: 61 a 140g (meio cheio)
-      // 3: 141 a 220g (quase cheio)
-      // 4: 221 a 250g (cheio até o topo)
-      let stage = 0;
-      if (currentGrams >= 221) stage = 4;
-      else if (currentGrams >= 141) stage = 3;
-      else if (currentGrams >= 61) stage = 2;
-      else if (currentGrams > 0) stage = 1;
-
-      for (let i = 0; i <= 4; i++) {
-        const el = document.getElementById('layer-' + i);
-        if (el) el.style.opacity = (i === stage) ? '1' : '0';
-      }
-
-      // Lacre especial se atingir 250g
-      const badge = document.getElementById('fullBadge');
-      if (currentGrams >= MAX_CAP) {
-        badge.style.opacity = '1';
-        badge.style.pointerEvents = 'auto';
+    function setMode(mode) {
+      currentMode = mode;
+      var bOval = document.getElementById('btnOval');
+      var bIso = document.getElementById('btnIso');
+      if (mode === 'oval') {
+        bOval.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#683f21] text-[#fffaf3] transition shadow';
+        bIso.className = 'px-3.5 py-1.5 text-xs font-semibold text-[#a89080] hover:text-[#fffaf3] transition';
       } else {
-        badge.style.opacity = '0';
-        badge.style.pointerEvents = 'none';
+        bIso.className = 'px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#683f21] text-[#fffaf3] transition shadow';
+        bOval.className = 'px-3.5 py-1.5 text-xs font-semibold text-[#a89080] hover:text-[#fffaf3] transition';
+      }
+      render();
+    }
+
+    function loadPreset(period) {
+      currentPeriod = period;
+      ['hoje', 'semana', 'mes'].forEach(p => {
+        var el = document.getElementById('tab' + p.charAt(0).toUpperCase() + p.slice(1));
+        if (p === period) {
+          el.className = 'px-3 py-1 text-xs font-bold rounded-lg bg-[#502e17] text-[#fffaf3] transition';
+        } else {
+          el.className = 'px-3 py-1 text-xs font-semibold text-[#9c8677] hover:text-[#fffaf3] transition';
+        }
+      });
+      tableItems = JSON.parse(JSON.stringify(presets[period]));
+      render();
+    }
+
+    function addCoffee(type) {
+      if (tableItems.length >= 14) {
+        showToast('A mesa está cheia com 14 preparos! Limpe para recomeçar.');
+        return;
+      }
+      var spot = tableItems.length;
+      var item = {
+        type: type,
+        spot: spot,
+        mins: type === 'espresso' ? 15 : type === 'chemex' ? 60 : type === 'coado' ? 30 : 20,
+        name: type === 'espresso' ? '⚡ Espresso Rústico' : type === 'chemex' ? '👑 Chemex Barista' : type === 'coado' ? '☕ Coado Terracota' : '💔 Xícara Trincada',
+        label: 'Sessão Concluída Agora'
+      };
+      tableItems.push(item);
+      render();
+    }
+
+    function resetTable() {
+      tableItems = [];
+      render();
+    }
+
+    /* SVGS INDIVIDUAIS DOS OBJETOS DA CAFETERIA */
+    function getCupSvg(type) {
+      if (type === 'coado') {
+        // Coado 30m: Xícara Terracota com pires, grãos de café torrados e vapor suave
+        return `
+          <g>
+            <!-- Sombra difusa sob o pires -->
+            <ellipse cx="0" cy="18" rx="35" ry="9" fill="rgba(8,4,2,0.65)"/>
+            
+            <!-- Pires de cerâmica esmaltada -->
+            <ellipse cx="0" cy="14" rx="33" ry="8" fill="#ECE1D6" stroke="#9E6943" stroke-width="1.8"/>
+            <ellipse cx="0" cy="13" rx="27" ry="5.8" fill="#DAC8B6"/>
+            
+            <!-- Asa da xícara -->
+            <path d="M19 -8 h9 a8 8 0 0 1 8 8 v4 a8 8 0 0 1-8 8 h-9" fill="none" stroke="#C8654B" stroke-width="4.8" stroke-linecap="round"/>
+            
+            <!-- Corpo bojudo da xícara de terracota -->
+            <path d="M-21 -16 h42 v14 a21 19 0 0 1-21 21 a21 19 0 0 1-21 -21 z" fill="#C8654B" stroke="#873520" stroke-width="1.5"/>
+            <path d="M-19 -14 h10 v22 a19 17 0 0 1-10 -10 z" fill="rgba(255,255,255,0.12)"/>
+            
+            <!-- Borda interna da xícara e superfície do café aromático -->
+            <ellipse cx="0" cy="-16" rx="21" ry="5.8" fill="#FAF3EC" stroke="#873520" stroke-width="1.2"/>
+            <ellipse cx="0" cy="-16" rx="18" ry="4.2" fill="#381D0E"/>
+            <ellipse cx="2" cy="-16.5" rx="14" ry="2.8" fill="#4B2814"/>
+            <ellipse cx="-4" cy="-17" rx="3" ry="1.2" fill="#C48E59" opacity="0.6"/>
+
+            <!-- 2 Grãos de café torrados ao lado no pires -->
+            <g transform="translate(-21, 14) rotate(-20)">
+              <ellipse cx="0" cy="0" rx="3.8" ry="2.4" fill="#2B1508"/>
+              <line x1="-2" y1="0" x2="2" y2="0" stroke="#482510" stroke-width="0.8"/>
+            </g>
+            <g transform="translate(-16, 17) rotate(25)">
+              <ellipse cx="0" cy="0" rx="3.4" ry="2.2" fill="#221006"/>
+              <line x1="-1.8" y1="0" x2="1.8" y2="0" stroke="#482510" stroke-width="0.7"/>
+            </g>
+
+            <!-- Vapor sutil subindo -->
+            <path class="steam-anim-1" d="M-4 -24 Q-8 -36 -3 -46" fill="none" stroke="#FFF7ED" stroke-width="1.8" opacity="0.5" stroke-linecap="round"/>
+            <path class="steam-anim-2" d="M5 -22 Q9 -34 3 -44" fill="none" stroke="#FFF7ED" stroke-width="1.8" opacity="0.5" stroke-linecap="round"/>
+          </g>`;
+      }
+      if (type === 'espresso') {
+        // Espresso 15m: Xicrinha azul marinho com crema aveludada dourada e colherzinha de barista
+        return `
+          <g>
+            <!-- Sombra do pires e da colher -->
+            <ellipse cx="-2" cy="16" rx="28" ry="7.5" fill="rgba(8,4,2,0.65)"/>
+            
+            <!-- Colherzinha de barista de aço escovado descansando ao lado -->
+            <g transform="translate(25, 7) rotate(32)">
+              <ellipse cx="0" cy="0" rx="5.2" ry="3.2" fill="#E2E2E8" stroke="#90909C" stroke-width="0.8"/>
+              <ellipse cx="0" cy="0" rx="4" ry="2.2" fill="#C4C4CE"/>
+              <path d="M5 0 L20 0" stroke="#B8B8C2" stroke-width="1.8" stroke-linecap="round"/>
+              <circle cx="20" cy="0" r="1.3" fill="#888894"/>
+            </g>
+
+            <!-- Pires do espresso -->
+            <ellipse cx="-4" cy="12" rx="26" ry="6.8" fill="#ECE1D6" stroke="#2B4663" stroke-width="1.5"/>
+            <ellipse cx="-4" cy="11" rx="20" ry="4.8" fill="#DAC8B6"/>
+
+            <!-- Asa do espresso -->
+            <path d="M10 -6 h7 a6 6 0 0 1 6 6 v2 a6 6 0 0 1-6 6 h-7" fill="none" stroke="#3D6892" stroke-width="3.8" stroke-linecap="round"/>
+
+            <!-- Xicrinha azul marinho -->
+            <path d="M-18 -12 h30 v10 a15 13 0 0 1-15 15 a15 13 0 0 1-15 -15 z" fill="#3D6892" stroke="#1D3650" stroke-width="1.2"/>
+            <ellipse cx="-3" cy="-12" rx="15" ry="4.4" fill="#ECE1D6" stroke="#1D3650" stroke-width="1"/>
+            
+            <!-- Crema espessa dourada do espresso puro -->
+            <ellipse cx="-3" cy="-12" rx="12.5" ry="3.2" fill="#C68929"/>
+            <ellipse cx="-2" cy="-12.3" rx="8" ry="1.8" fill="#DE9E3A"/>
+
+            <!-- Vapor leve -->
+            <path class="steam-anim-1" d="M-3 -18 Q-1 -26 -4 -34" fill="none" stroke="#FFF7ED" stroke-width="1.4" opacity="0.45" stroke-linecap="round"/>
+          </g>`;
+      }
+      if (type === 'chemex') {
+        // Chemex 60m: Decanter de vidro em formato ampulheta com colar de madeira, laço de couro e xícara servida
+        return `
+          <g>
+            <!-- Sombra ampla da jarra e xícara -->
+            <ellipse cx="0" cy="23" rx="46" ry="11" fill="rgba(8,4,2,0.7)"/>
+
+            <!-- Descanso de linho rústico sob a jarra -->
+            <ellipse cx="-6" cy="22" rx="34" ry="8.5" fill="#C2B29F" stroke="#9C8770" stroke-width="1.2" stroke-dasharray="3,2"/>
+
+            <!-- Xícara dourada servida ao lado -->
+            <g transform="translate(28, 7) scale(0.72)">
+              <ellipse cx="0" cy="18" rx="22" ry="6" fill="rgba(0,0,0,0.3)"/>
+              <ellipse cx="0" cy="14" rx="20" ry="5.5" fill="#ECE1D6" stroke="#784B18" stroke-width="1.2"/>
+              <path d="M-15 -8 h30 v12 a15 13 0 0 1-15 15 a15 13 0 0 1-15 -15 z" fill="#E2AE3C" stroke="#784B18" stroke-width="1.5"/>
+              <ellipse cx="0" cy="-8" rx="15" ry="4.2" fill="#381D0E"/>
+              <path class="steam-anim-2" d="M0 -14 Q3 -24 0 -32" fill="none" stroke="#FFF" stroke-width="1.8" opacity="0.5"/>
+            </g>
+
+            <!-- Decanter Chemex (Vidro borossilicato transparente) -->
+            <path d="M-18 -26 h36 l-12 20 14 28 a6 6 0 0 1-5 8 H-15 a6 6 0 0 1-5-8 l14-28 z" fill="rgba(240,248,255,0.42)" stroke="#D8C8B8" stroke-width="1.8"/>
+            
+            <!-- Café âmbar rico filtrado dentro da Chemex -->
+            <path d="M-15 10 h30 l4 10 a5 5 0 0 1-4 6 H-15 a5 5 0 0 1-4-6 z" fill="#4E2711" opacity="0.95"/>
+            <ellipse cx="0" cy="10" rx="15" ry="3.5" fill="#6B3718"/>
+
+            <!-- Colar de madeira nobre polida da Chemex -->
+            <path d="M-10 -7 h20 l-3 13 H-7 z" fill="#B07B42" stroke="#68421E" stroke-width="1.4"/>
+            <!-- Cordão de couro com nó e miçanga -->
+            <line x1="-10" y1="0" x2="10" y2="0" stroke="#3D2010" stroke-width="2.2"/>
+            <circle cx="0" cy="0" r="2.8" fill="#3D2010"/>
+            <path d="M0 0 L-2 7" stroke="#3D2010" stroke-width="1.6" stroke-linecap="round"/>
+            <path d="M0 0 L3 6" stroke="#3D2010" stroke-width="1.6" stroke-linecap="round"/>
+
+            <!-- Vapor rico do café filtrado na hora -->
+            <path class="steam-anim-1" d="M0 -34 Q-4 -46 2 -56" fill="none" stroke="#FDE8B3" stroke-width="2.2" opacity="0.65" stroke-linecap="round"/>
+            <path class="steam-anim-2" d="M-4 -30 Q4 -42 -2 -50" fill="none" stroke="#FFF7ED" stroke-width="1.6" opacity="0.45" stroke-linecap="round"/>
+          </g>`;
+      }
+      // Foco Quebrado: Xícara tombada com rachadura e poça orgânica de café derramado nas tábuas de madeira
+      return `
+        <g>
+          <!-- Poça orgânica de café derramado se espalhando pelas tábuas -->
+          <path d="M-42 15 Q-20 6 15 10 Q46 7 52 18 Q38 28 8 26 Q-28 27 -42 15 Z" fill="#221006" opacity="0.92"/>
+          <path d="M-15 16 Q10 12 30 14 Q38 22 10 22 Q-10 22 -15 16 Z" fill="#33180A"/>
+          <!-- Gotículas espirradas -->
+          <circle cx="-46" cy="13" r="2.5" fill="#221006"/>
+          <circle cx="56" cy="21" r="2.2" fill="#221006"/>
+          <circle cx="28" cy="27" r="1.8" fill="#221006"/>
+          
+          <!-- Xícara tombada de cerâmica com trincado visível -->
+          <g transform="translate(2, 6) rotate(-38)">
+            <ellipse cx="-2" cy="16" rx="20" ry="5.5" fill="rgba(0,0,0,0.3)"/>
+            <path d="M-15 -6 h30 v12 a15 13 0 0 1-15 15 a15 13 0 0 1-15 -15 z" fill="#8C847B" stroke="#48423B" stroke-width="1.5"/>
+            <ellipse cx="0" cy="-6" rx="15" ry="4.5" fill="#5A534C"/>
+            
+            <!-- Linha da rachadura na xícara -->
+            <path d="M-5 -6 L1 6 L-3 12 L3 20" fill="none" stroke="#1A1512" stroke-width="2" stroke-linecap="round"/>
+            <!-- Caco de cerâmica solto na mesa -->
+            <polygon points="18,3 24,7 19,12" fill="#8C847B" stroke="#48423B" stroke-width="0.8" transform="translate(6, 12) rotate(22)"/>
+          </g>
+        </g>`;
+    }
+
+    function render() {
+      var ok = tableItems.filter(x => x.type !== 'quebrado').length;
+      var bad = tableItems.filter(x => x.type === 'quebrado').length;
+      var mins = tableItems.reduce((acc, x) => acc + (x.type !== 'quebrado' ? x.mins : 0), 0);
+      
+      document.getElementById('sceneSummary').innerHTML = `
+        ☕ <b>${ok}</b> na mesa · ⏱️ <b>${mins}m</b> focados 
+        ${bad ? `· <span class="text-rose-400 font-semibold">💔 ${bad} derramada</span>` : ''}
+      `;
+
+      var spots = currentMode === 'oval' ? ovalSpots : isoSpots;
+
+      // Ordena rigorosamente por profundidade Z para sobreposição perfeita (quem tá no fundo é desenhado antes)
+      var sorted = [];
+      tableItems.forEach((it, idx) => {
+        var sp = spots[idx % spots.length];
+        sorted.push({ item: it, spot: sp, idx: idx });
+      });
+      sorted.sort((a, b) => a.spot.z - b.spot.z);
+
+      var itemsSvg = '';
+      sorted.forEach(s => {
+        var it = s.item, sp = s.spot;
+        var info = `${it.name} · ${it.label} (${it.mins}m)`;
+        itemsSvg += `
+        <g class="obj-depth cursor-pointer" transform="translate(${sp.x}, ${sp.y}) scale(${sp.scale})" onclick="showToast('${info}')">
+          ${getCupSvg(it.type)}
+        </g>`;
+      });
+
+      var viewport = document.getElementById('sceneViewport');
+
+      if (currentMode === 'oval') {
+        // MESA REDONDA/OVAL DE MADEIRA MACIÇA 2.5D
+        viewport.innerHTML = `
+        <svg viewBox="0 0 600 450" class="w-full h-full select-none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="14"/>
+            </filter>
+            
+            <radialGradient id="tableWoodGlow" cx="50%" cy="38%" r="62%">
+              <stop offset="0%" stop-color="#7B4E2B"/>
+              <stop offset="50%" stop-color="#54331A"/>
+              <stop offset="85%" stop-color="#341E0F"/>
+              <stop offset="100%" stop-color="#1E1007"/>
+            </radialGradient>
+
+            <linearGradient id="tableThickness" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#9C6B43"/>
+              <stop offset="35%" stop-color="#6F4625"/>
+              <stop offset="100%" stop-color="#261408"/>
+            </linearGradient>
+
+            <radialGradient id="warmLamp" cx="50%" cy="20%" r="65%">
+              <stop offset="0%" stop-color="#FFDE9E" stop-opacity="0.32"/>
+              <stop offset="60%" stop-color="#C98A24" stop-opacity="0.08"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+            </radialGradient>
+
+            <!-- Clip do tampo da mesa para recortar as tábuas de madeira perfeitamente -->
+            <clipPath id="tableClip">
+              <ellipse cx="300" cy="230" rx="270" ry="125"/>
+            </clipPath>
+          </defs>
+
+          <!-- Sombra Suave da Mesa no Chão -->
+          <ellipse cx="300" cy="390" rx="275" ry="38" fill="rgba(0,0,0,0.75)" filter="url(#softShadow)"/>
+
+          <!-- Borda / Espessura 3D da Madeira Maciça -->
+          <path d="M30 230 C30 355 570 355 570 230 v32 C570 387 30 387 30 262 Z" fill="url(#tableThickness)"/>
+
+          <!-- Tampo Principal da Mesa Oval 2.5D -->
+          <ellipse cx="300" cy="230" rx="270" ry="125" fill="url(#tableWoodGlow)" stroke="#9C6B43" stroke-width="2.5"/>
+
+          <!-- Tábuas e Veios de Madeira Cortados no Tampo -->
+          <g clip-path="url(#tableClip)">
+            <!-- Linhas de junção das tábuas da mesa -->
+            <line x1="30" y1="165" x2="570" y2="165" stroke="rgba(0,0,0,0.3)" stroke-width="1.8"/>
+            <line x1="30" y1="166" x2="570" y2="166" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"/>
+
+            <line x1="30" y1="210" x2="570" y2="210" stroke="rgba(0,0,0,0.3)" stroke-width="1.8"/>
+            <line x1="30" y1="211" x2="570" y2="211" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"/>
+
+            <line x1="30" y1="255" x2="570" y2="255" stroke="rgba(0,0,0,0.3)" stroke-width="1.8"/>
+            <line x1="30" y1="256" x2="570" y2="256" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"/>
+
+            <line x1="30" y1="300" x2="570" y2="300" stroke="rgba(0,0,0,0.3)" stroke-width="1.8"/>
+            <line x1="30" y1="301" x2="570" y2="301" stroke="rgba(255,255,255,0.06)" stroke-width="0.8"/>
+
+            <!-- Veios circulares sutis da madeira envelhecida -->
+            <ellipse cx="300" cy="230" rx="240" ry="110" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2"/>
+            <ellipse cx="300" cy="230" rx="180" ry="80" fill="none" stroke="rgba(0,0,0,0.12)" stroke-width="2"/>
+          </g>
+
+          <!-- Foco de Luz Quente da Luminária Pendente sobre a Mesa -->
+          <ellipse cx="300" cy="210" rx="220" ry="100" fill="url(#warmLamp)" pointer-events="none"/>
+
+          <!-- Grãos de Café Espalhados Organicamente pela Madeira -->
+          <ellipse cx="140" cy="245" rx="4.5" ry="2.8" fill="#221006" transform="rotate(35 140 245)"/>
+          <ellipse cx="465" cy="230" rx="4.2" ry="2.6" fill="#221006" transform="rotate(-40 465 230)"/>
+          <ellipse cx="475" cy="235" rx="3.8" ry="2.3" fill="#2B1508" transform="rotate(15 475 235)"/>
+
+          <!-- Bebidas e Xícaras dispostas com profundidade Z orgânica -->
+          ${itemsSvg}
+        </svg>`;
+      } else {
+        // ILHA ISOMÉTRICA 3D (LOSANGO IDÊNTICO À ESTRUTURA DO FOREST)
+        viewport.innerHTML = `
+        <svg viewBox="0 0 600 450" class="w-full h-full select-none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <filter id="softShadowIso" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="15"/>
+            </filter>
+            <linearGradient id="isoTopWood" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7B4E2B"/>
+              <stop offset="50%" stop-color="#5E381C"/>
+              <stop offset="100%" stop-color="#462812"/>
+            </linearGradient>
+            <linearGradient id="isoSideLeft" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#442813"/>
+              <stop offset="100%" stop-color="#221206"/>
+            </linearGradient>
+            <linearGradient id="isoSideRight" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#361F0E"/>
+              <stop offset="100%" stop-color="#180C03"/>
+            </linearGradient>
+            <radialGradient id="isoLamp" cx="50%" cy="30%" r="55%">
+              <stop offset="0%" stop-color="#FFDE9E" stop-opacity="0.28"/>
+              <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <!-- Sombra Projetada do Bloco 3D -->
+          <polygon points="300,410 540,290 300,170 60,290" fill="rgba(0,0,0,0.7)" filter="url(#softShadowIso)"/>
+
+          <!-- Face 3D Esquerda do Bloco Maciço -->
+          <polygon points="60,240 300,360 300,412 60,292" fill="url(#isoSideLeft)"/>
+          <!-- Face 3D Direita do Bloco Maciço -->
+          <polygon points="300,360 540,240 540,292 300,412" fill="url(#isoSideRight)"/>
+          
+          <!-- Topo Isométrico do Bloco (A Bancada Losango Estilo Forest) -->
+          <polygon points="300,120 540,240 300,360 60,240" fill="url(#isoTopWood)" stroke="#9C6B43" stroke-width="2"/>
+          
+          <!-- Tábuas Isométricas no Topo -->
+          <line x1="180" y1="180" x2="420" y2="300" stroke="rgba(0,0,0,0.25)" stroke-width="1.6"/>
+          <line x1="240" y1="150" x2="480" y2="270" stroke="rgba(0,0,0,0.25)" stroke-width="1.6"/>
+          <line x1="120" y1="210" x2="360" y2="330" stroke="rgba(0,0,0,0.25)" stroke-width="1.6"/>
+
+          <!-- Luz Âmbar no Centro -->
+          <ellipse cx="300" cy="240" rx="160" ry="80" fill="url(#isoLamp)" pointer-events="none"/>
+
+          <!-- Bebidas Organizadas na Bancada Isométrica -->
+          ${itemsSvg}
+        </svg>`;
       }
     }
 
-    function resetJar() {
-      currentGrams = 0;
-      document.getElementById('simTitle').innerText = 'Pote pronto para o próximo foco';
-      updateView();
-    }
-
-    updateView();
+    // Inicialização com o Preset Hoje
+    render();
   </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 import { $, mmss, uid, today, addDays, toMin, nowMin, fmtShort, mondayOf } from './utils.js';
-import { S, UI, SH, resetState, save, L, cmp, findTask, normTask, setDone, planned, setPlan, archiveFocus, currentGoal, updateTheme, screenStatusHTML, CUP_ASSETS, cupMeta, addCup, cupFallback, heroFallbackHTML, holdScreen, releaseLock, setAmbience, alertUser, toast, closeSheet, haptic, playZenBell } from './state.js';
+import { S, UI, SH, resetState, save, L, cmp, findTask, normTask, setDone, planned, setPlan, archiveFocus, currentGoal, updateTheme, screenStatusHTML, CUP_ASSETS, cupMeta, addCup, cupFallback, heroFallbackHTML, holdScreen, releaseLock, setAmbience, alertUser, toast, closeSheet } from './state.js';
 import { gcCfg, gcResetToken, gcRun, gcDiag, gcDisconnect, gcToggleCal, gcReloadCals, mdSync, mdFile, confirmInbox, ignoreInbox } from './sync.js';
 import { renderHoje, prioSheet } from './views/hoje.js';
 import { suggestionsFor, placeSuggestion, plannerSheet, blockSheet, PRESETS, dayChips, routineSheet, renderAgenda } from './views/agenda.js';
@@ -188,7 +188,7 @@ document.addEventListener('click',function(e){
   var el=e.target.closest('[data-act]');if(!el)return;
   var a=el.dataset.act,id=el.dataset.id,t,k;
   switch(a){
-    case 'tab':try{haptic('tick')}catch(e){}go(el.dataset.tab);break;
+    case 'tab':go(el.dataset.tab);break;
     case 'prio-sheet':prioSheet();break;
     case 'notify-enable':requestNotifyPermission();break;
     case 'push-connect':var psi=$('#pushServerInput');subscribeWebPush(psi?psi.value.trim():'');break;
@@ -262,17 +262,16 @@ document.addEventListener('click',function(e){
     case 'md-sync':mdSync();break;
     case 'cup-pick':S.draft.cupModel=el.dataset.v===''?null:+el.dataset.v;save();render();break;
     case 'amb-set':setAmbience(el.dataset.v);render();break;
-    case 'focus-task':try{haptic('tap')}catch(e){}closeSheet();S.draft.taskId=id;S.draft.cat='';save();go('hoje');break;
-    case 'dur-minus':try{haptic('tick')}catch(e){}S.draft.mins=Math.max(5,(S.draft.mins<5?5:Math.round(S.draft.mins/5)*5)-5);save();updateDur();break;
-    case 'dur-plus':try{haptic('tick')}catch(e){}S.draft.mins=Math.min(720,(S.draft.mins<5?0:Math.round(S.draft.mins/5)*5)+5);save();updateDur();break;
+    case 'focus-task':closeSheet();S.draft.taskId=id;S.draft.cat='';save();go('hoje');break;
+    case 'dur-minus':S.draft.mins=Math.max(5,(S.draft.mins<5?5:Math.round(S.draft.mins/5)*5)-5);save();updateDur();break;
+    case 'dur-plus':S.draft.mins=Math.min(720,(S.draft.mins<5?0:Math.round(S.draft.mins/5)*5)+5);save();updateDur();break;
     case 'dur-test':S.draft.mins=0.1667;save();updateDur();break;
     case 'kind-set':S.draft.kind=el.dataset.v==='parcial'?'parcial':'total';save();setKindUI();break;
     case 'start-focus':
-      try{haptic('start')}catch(e){}
       var cl2=$('#customLabel'),tid=effTaskId(),tk=tid?findTask(tid):null;
       openRitual({mins:S.draft.mins,kind:S.draft.kind,taskId:tid,label:tk?tk.text:((cl2&&cl2.value.trim())||'Foco livre'),cat:effCat()||'Sem categoria',src:'manual'});break;
     case 'pre-kind':if(UI.pre){UI.pre.cfg.kind=el.dataset.v==='parcial'?'parcial':'total';render()}break;
-    case 'pre-go':if(UI.pre){try{haptic('start')}catch(e){}primeFocusAudio(UI.amb);UI.pre.step='v60';clearTimeout(UI.preTimer);UI.preTimer=setTimeout(beginFocus,2400);render()}break;
+    case 'pre-go':if(UI.pre){primeFocusAudio(UI.amb);UI.pre.step='v60';clearTimeout(UI.preTimer);UI.preTimer=setTimeout(beginFocus,2400);render()}break;
     case 'pre-skip':primeFocusAudio(UI.amb);clearTimeout(UI.preTimer);beginFocus();break;
     case 'pre-back':clearTimeout(UI.preTimer);UI.pre=null;go('hoje');break;
     case 'end-partial':endPartial();break;
@@ -280,13 +279,7 @@ document.addEventListener('click',function(e){
     case 'sg-no':var sn=UI.sg[+el.dataset.i];if(sn){UI.dismissed[UI.sgDay+'|'+sn.task.id]=true;plannerSheet(UI.sgDay)}break;
     case 'sg-edit':closeSheet();taskSheet(id);break;
     case 'sg-all':for(var gd=0;gd<8;gd++){var gl=suggestionsFor(UI.sgDay).filter(function(x){return x.fits===true});if(!gl.length)break;placeSuggestion(UI.sgDay,gl[0])}toast('Colocadas as que cabem.');render();plannerSheet(UI.sgDay);break;
-    case 'sg-focus':
-      var sDur=parseInt(el.dataset.dur,10);
-      var gt=findTask(id);
-      if(gt){
-        try{haptic('tap')}catch(e){}
-        openRitual({mins:(sDur>0?sDur:(gt.est>0?gt.est:S.draft.mins)),kind:S.draft.kind,taskId:gt.id,label:gt.text,cat:gt.cat||'Sem categoria',src:'manual'});
-      }break;
+    case 'sg-focus':var gt=findTask(id);if(gt)openRitual({mins:gt.est>0?gt.est:S.draft.mins,kind:S.draft.kind,taskId:gt.id,label:gt.text,cat:gt.cat||'Sem categoria',src:'manual'});break;
     case 'sg-hide':UI.hideSug=today();render();break;
     case 'gc-save-id':var cid=($('#gcClientId').value||'').trim();if(!/\.apps\.googleusercontent\.com$/.test(cid)){toast('Isso não parece um Client ID do Google (termina em .apps.googleusercontent.com).');break}gcCfg().clientId=cid;gcCfg().status='ready';save();render();break;
     case 'gc-change-id':gcCfg().clientId='';gcCfg().status='off';gcResetToken(false);save();render();break;
@@ -353,7 +346,6 @@ document.addEventListener('click',function(e){
     case 'focus-block':
       k=el.dataset.k;var b=(S.blocks[k]||[]).find(function(x){return x.id===id});
       if(b){
-        try{haptic('tap')}catch(e){}
         var s0=toMin(b.start),e0=toMin(b.end),nmn=nowMin(),dur=Math.max(5,e0-s0);
         if(k===today()&&nmn>=s0&&nmn<e0)dur=Math.max(5,e0-nmn);   /* evento em andamento: usa o que falta, sem teto de 60 min */
         var tk2=b.taskId?findTask(b.taskId):null;
@@ -440,17 +432,7 @@ document.addEventListener('change',function(e){
   save();var ss=$('#screenStatus');if(ss)ss.innerHTML=screenStatusHTML();updateTheme();
 });
 
-document.addEventListener('input',function(e){
-  var t=e.target;
-  if(t&&t.id==='durRange'){
-    var val=+t.value;
-    if(val!==S.draft.mins){
-      try{haptic('tick')}catch(e){}
-      S.draft.mins=val;
-      updateDur();
-    }
-  }
-});
+document.addEventListener('input',function(e){var t=e.target;if(t&&t.id==='durRange'){S.draft.mins=+t.value;updateDur()}});
 if(!checkGateParam()){
   var f0=S.focus;
   if(!f0||(f0.mode!=='focus'&&f0.mode!=='break')){

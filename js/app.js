@@ -64,6 +64,7 @@ export function go(tab){
 export function render(){
   if(TABS.indexOf(S.tab)<0)S.tab='hoje';
   TABS.forEach(function(t){$('#tab-'+t).hidden=(t!==S.tab)});
+  document.body.classList.toggle('tab-vontade', S.tab === 'vontade');
   document.querySelectorAll('.bar button').forEach(function(b){b.setAttribute('aria-current',b.dataset.tab===(['colecao','jornada','foco'].indexOf(S.tab)>-1?'hoje':S.tab)?'page':'false')});
   updateTheme();
   ({hoje:renderHoje,agenda:renderAgenda,tarefas:renderTarefas,foco:renderFoco,vontade:renderVontade,revisao:renderRevisao,colecao:renderColecao,jornada:renderJornada})[S.tab]();

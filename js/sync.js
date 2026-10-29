@@ -313,16 +313,11 @@ export function gcalPanelHTML(){
 }
 export function gcMoodleReady(){var c=gcCfg();return !!(c.clientId&&c.moodleCals&&c.moodleCals.length)}
 export function moodlePanelHTML(){
-  var m=S.moodle,h='<div class="gc" style="margin-top:14px"><h3>Importar Tarefas Externas</h3><p class="small muted" style="margin-top:6px">Atividades de calendários da Agenda, arquivos .ics ou conexões chegam aqui em <b>Entrada</b> e só viram tarefas depois que você confirmar.</p><div class="row"><button class="btn small" data-act="md-ics">Importar arquivo (.ics)</button>';
+  var m=S.moodle,h='<div class="gc" style="margin-top:14px"><h3>Importar Tarefas Externas</h3><p class="small muted" style="margin-top:6px">Atividades de calendários da Agenda ou arquivos .ics chegam aqui em <b>Entrada</b> e só viram tarefas depois que você confirmar.</p><div class="row"><button class="btn small" data-act="md-ics">Importar arquivo (.ics)</button>';
   if(gcMoodleReady())h+='<button class="btn quiet small" data-act="gc-sync"'+(UI.gcBusy?' disabled':'')+'>'+(UI.gcBusy?'Sincronizando...':'Atualizar pela Agenda')+'</button>';
-  if(m.baseUrl&&m.token)h+='<button class="btn quiet small" data-act="md-sync"'+(UI.mdBusy?' disabled':'')+'>'+(UI.mdBusy?'Atualizando...':'Atualizar do Moodle')+'</button>';
-  h+='<button class="btn quiet small" data-act="md-cfg">'+(UI.mdCfg?'Fechar conexão':'Conexão direta Moodle')+'</button></div><input type="file" id="mdIcs" accept=".ics,text/calendar,text/plain" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1">';
-  if(m.lastResult)h+='<p class="small muted" style="margin-top:8px">Última importação: '+new Date(m.lastSync).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' ('+m.lastResult.added+' novas, '+m.lastResult.updated+' já em Novos, '+m.lastResult.skipped+' já tratadas ou antigas).</p>';
+  h+='</div><input type="file" id="mdIcs" accept=".ics,text/calendar,text/plain" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1">';
+  if(m.lastResult)h+='<p class="small muted" style="margin-top:8px">Última importação: '+new Date(m.lastSync).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' ('+m.lastResult.added+' novas, '+m.lastResult.updated+' já em Entrada, '+m.lastResult.skipped+' já tratadas ou antigas).</p>';
   if(UI.mdErr)h+='<div class="nudge small" style="margin-top:10px">'+esc(UI.mdErr)+'</div>';
-  if(UI.mdCfg)h+='<label class="flabel" for="mdUrl">Endereço do Moodle</label><input class="field" id="mdUrl" value="'+esc(m.baseUrl)+'" placeholder="https://moodle.suafaculdade.edu.br" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-    '<label class="flabel" for="mdTok">Token do serviço web</label><input class="field" id="mdTok" type="password" autocomplete="off" placeholder="'+(m.token?'salvo neste aparelho (deixe vazio para manter)':'cole o token')+'">'+
-    '<div class="row"><button class="btn small" data-act="md-save">Salvar</button><button class="btn quiet small danger" data-act="md-clear">Apagar token</button></div>'+
-    '<p class="small muted" style="margin-top:8px">O token fica salvo só neste aparelho, nunca no código. Navegadores costumam bloquear chamadas diretas ao Moodle (CORS); se acontecer, use a importação .ics ou peça à TI da faculdade para liberar este endereço.</p>';
   return h+'</div>';
 }
 

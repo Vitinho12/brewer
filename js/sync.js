@@ -230,7 +230,7 @@ export function gcRun(){
   UI.gcBusy=true;UI.gcErr='';
   var p=gcSync();            /* chamado antes de qualquer render, ainda dentro do toque */
   render();
-  p.then(function(r){UI.gcBusy=false;toast('Sincronizado: '+pl(r.imp,'item importado','itens importados')+', '+pl(r.created,'bloco enviado','blocos enviados')+'.'+(r.moodle&&r.moodle.added?' '+r.moodle.added+' nova(s) em Faculdade, Novos.':''));render()},function(e){UI.gcBusy=false;UI.gcErr=gcMsg(e);render()});
+  p.then(function(r){UI.gcBusy=false;toast('Sincronizado: '+pl(r.imp,'item importado','itens importados')+', '+pl(r.created,'bloco enviado','blocos enviados')+'.'+(r.moodle&&r.moodle.added?' '+r.moodle.added+' nova(s) em Projetos, Entrada.':''));render()},function(e){UI.gcBusy=false;UI.gcErr=gcMsg(e);render()});
 }
 export function gcDisconnect(){
   var cfg=gcCfg(),t=gcTok;gcTok=null;gcExp=0;cfg.status='ready';cfg.lastSync=0;
@@ -270,8 +270,8 @@ export function gcalPanelHTML(){
   var st=cfg.status==='connected'?'Conectado.':'Pronto para conectar.';
   var last=cfg.lastSync?' Última sincronização: '+new Date(cfg.lastSync).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+(cfg.lastResult?' ('+(cfg.lastResult.got!==undefined?'Google retornou '+cfg.lastResult.got+'; ':'')+pl(cfg.lastResult.imp,'item importado','itens importados')+', '+pl(cfg.lastResult.created,'enviado','enviados')+').':'.'):'';
   h+='<p class="small muted" style="margin-top:6px">'+st+last+' Janela: últimos 7 dias até 30 dias à frente, calendário principal. Eventos de dia inteiro aparecem como &ldquo;Dia todo&rdquo;.</p>';
-  if(cfg.lastResult&&cfg.lastResult.cals)h+='<p class="small" style="margin-top:8px">Calendários lidos: '+cfg.lastResult.cals.map(function(c){return '<b>'+esc(c.name)+'</b> ('+pl(c.n,'evento','eventos')+(c.tz?', fuso '+esc(c.tz):'')+(c.md?', Moodle':'')+')'}).join('; ')+'.</p>';
-  if(cfg.lastResult&&cfg.lastResult.moodle){var mo=cfg.lastResult.moodle;h+='<p class="small" style="margin-top:8px">Moodle via Google: <b>'+mo.added+' nova(s)</b> em Faculdade, Novos; '+mo.updated+' já existentes'+(mo.gone?'; '+mo.gone+' não apareceram mais':'')+'.</p>'}
+  if(cfg.lastResult&&cfg.lastResult.cals)h+='<p class="small" style="margin-top:8px">Calendários lidos: '+cfg.lastResult.cals.map(function(c){return '<b>'+esc(c.name)+'</b> ('+pl(c.n,'evento','eventos')+(c.tz?', fuso '+esc(c.tz):'')+(c.md?', Gerar Tarefas':'')+')'}).join('; ')+'.</p>';
+  if(cfg.lastResult&&cfg.lastResult.moodle){var mo=cfg.lastResult.moodle;h+='<p class="small" style="margin-top:8px">Tarefas importadas: <b>'+mo.added+' nova(s)</b> em Projetos > Entrada; '+mo.updated+' já existentes'+(mo.gone?'; '+mo.gone+' não apareceram mais':'')+'.</p>'}
   if(cfg.lastResult&&cfg.lastResult.calErrors&&cfg.lastResult.calErrors.length)h+='<div class="nudge small" style="margin-top:8px">'+esc(cfg.lastResult.calErrors.join(' | '))+'</div>';
   if(cfg.diag)h+=diagHTML(cfg.diag);
   if(UI.gcErr)h+='<div class="nudge small" style="margin-top:12px">'+esc(UI.gcErr)+'</div>';
@@ -294,7 +294,7 @@ export function gcalPanelHTML(){
               '<span style="width:12px;height:12px;border-radius:50%;background:'+esc(c.bg)+';flex:none"></span>'+
               '<span style="font-size:15px;font-weight:600;line-height:1.2;word-break:break-word">'+esc(c.summary)+(c.primary?' <span class="muted small" style="font-weight:400">(Principal)</span>':'')+'</span>'+
             '</label>'+
-            '<button class="ghost small" data-act="gc-toggle-md" data-id="'+esc(c.id)+'" style="font-size:12px;padding:5px 10px;border-radius:99px;border:1px solid '+(isMd?'var(--sea)':'var(--line)')+';background:'+(isMd?'var(--sea-soft)':'transparent')+';color:'+(isMd?'var(--ink)':'var(--muted)')+';flex:none;font-weight:600;min-height:30px">'+(isMd?'✓ Moodle':'Moodle')+'</button>'+
+            '<button class="ghost small" data-act="gc-toggle-md" data-id="'+esc(c.id)+'" style="font-size:12px;padding:5px 10px;border-radius:99px;border:1px solid '+(isMd?'var(--sea)':'var(--line)')+';background:'+(isMd?'var(--sea-soft)':'transparent')+';color:'+(isMd?'var(--ink)':'var(--muted)')+';flex:none;font-weight:600;min-height:30px">'+(isMd?'✓ Gerar Tarefas':'Gerar Tarefas')+'</button>'+
           '</div>';
         }).join('')+
         '</div><div class="row" style="margin-top:10px"><button class="ghost small" data-act="gc-reload-cals">Atualizar lista de calendários</button></div></div>';
@@ -306,17 +306,17 @@ export function gcalPanelHTML(){
   h+='<details style="margin-top:20px;font-size:13px;color:var(--muted)">'+
     '<summary style="cursor:pointer;padding:6px 0;font-weight:600">Configurações manuais de ID (avançado)</summary>'+
     '<label class="flabel" for="gcExtra" style="margin-top:10px">Outros calendários (IDs manuais)</label><input class="field" id="gcExtra" value="'+esc((cfg.extraCals||[]).join(', '))+'" placeholder="IDs separados por vírgula" autocomplete="off" autocapitalize="off" spellcheck="false">'+
-    '<label class="flabel" for="gcMoodle" style="margin-top:14px">Calendários do Moodle (IDs manuais)</label><input class="field" id="gcMoodle" value="'+esc((cfg.moodleCals||[]).join(', '))+'" placeholder="IDs separados por vírgula" autocomplete="off" autocapitalize="off" spellcheck="false">'+
+    '<label class="flabel" for="gcMoodle" style="margin-top:14px">Calendários para gerar tarefas (IDs manuais)</label><input class="field" id="gcMoodle" value="'+esc((cfg.moodleCals||[]).join(', '))+'" placeholder="IDs separados por vírgula" autocomplete="off" autocapitalize="off" spellcheck="false">'+
     '<div class="row" style="margin-top:8px"><button class="ghost small" data-act="gc-change-id">Trocar Client ID</button></div>'+
   '</details></div>';
   return h;
 }
 export function gcMoodleReady(){var c=gcCfg();return !!(c.clientId&&c.moodleCals&&c.moodleCals.length)}
 export function moodlePanelHTML(){
-  var m=S.moodle,h='<div class="gc" style="margin-top:14px"><h3>Moodle</h3><p class="small muted" style="margin-top:6px">As atividades chegam aqui em Novos (por arquivo .ics, por um calendário do Moodle no Google Agenda ou pela conexão direta) e só viram tarefas depois que você confirmar.</p><div class="row"><button class="btn small" data-act="md-ics">Importar arquivo .ics</button>';
-  if(gcMoodleReady())h+='<button class="btn quiet small" data-act="gc-sync"'+(UI.gcBusy?' disabled':'')+'>'+(UI.gcBusy?'Sincronizando...':'Atualizar pelo Google')+'</button>';
+  var m=S.moodle,h='<div class="gc" style="margin-top:14px"><h3>Importar Tarefas Externas</h3><p class="small muted" style="margin-top:6px">Atividades de calendários da Agenda, arquivos .ics ou conexões chegam aqui em <b>Entrada</b> e só viram tarefas depois que você confirmar.</p><div class="row"><button class="btn small" data-act="md-ics">Importar arquivo (.ics)</button>';
+  if(gcMoodleReady())h+='<button class="btn quiet small" data-act="gc-sync"'+(UI.gcBusy?' disabled':'')+'>'+(UI.gcBusy?'Sincronizando...':'Atualizar pela Agenda')+'</button>';
   if(m.baseUrl&&m.token)h+='<button class="btn quiet small" data-act="md-sync"'+(UI.mdBusy?' disabled':'')+'>'+(UI.mdBusy?'Atualizando...':'Atualizar do Moodle')+'</button>';
-  h+='<button class="btn quiet small" data-act="md-cfg">'+(UI.mdCfg?'Fechar conexão':'Conexão direta')+'</button></div><input type="file" id="mdIcs" accept=".ics,text/calendar,text/plain" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1">';
+  h+='<button class="btn quiet small" data-act="md-cfg">'+(UI.mdCfg?'Fechar conexão':'Conexão direta Moodle')+'</button></div><input type="file" id="mdIcs" accept=".ics,text/calendar,text/plain" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" tabindex="-1">';
   if(m.lastResult)h+='<p class="small muted" style="margin-top:8px">Última importação: '+new Date(m.lastSync).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' ('+m.lastResult.added+' novas, '+m.lastResult.updated+' já em Novos, '+m.lastResult.skipped+' já tratadas ou antigas).</p>';
   if(UI.mdErr)h+='<div class="nudge small" style="margin-top:10px">'+esc(UI.mdErr)+'</div>';
   if(UI.mdCfg)h+='<label class="flabel" for="mdUrl">Endereço do Moodle</label><input class="field" id="mdUrl" value="'+esc(m.baseUrl)+'" placeholder="https://moodle.suafaculdade.edu.br" autocomplete="off" autocapitalize="off" spellcheck="false">'+
@@ -421,7 +421,7 @@ export function mdMsg(e){
 export function mdSync(){
   if(UI.mdBusy)return;
   UI.mdBusy=true;UI.mdErr='';var p=Moodle.fetchUpcoming(S.moodle);render();
-  p.then(function(list){UI.mdBusy=false;var r=mdMerge(list);S.moodle.lastSync=Date.now();S.moodle.lastResult=r;save();toast(r.added+' nova(s) em Novos.');render()},function(e){UI.mdBusy=false;UI.mdErr=mdMsg(e);render()});
+  p.then(function(list){UI.mdBusy=false;var r=mdMerge(list);S.moodle.lastSync=Date.now();S.moodle.lastResult=r;save();toast(r.added+' nova(s) em Entrada.');render()},function(e){UI.mdBusy=false;UI.mdErr=mdMsg(e);render()});
 }
 export function mdFile(inp){
   var f=inp.files&&inp.files[0];if(!f)return;
@@ -429,7 +429,7 @@ export function mdFile(inp){
   rd.onload=function(){
     UI.mdErr='';
     try{var list=Moodle.parseICS(String(rd.result||''));var r=mdMerge(list);S.moodle.lastSync=Date.now();S.moodle.lastResult=r;save();
-      if(!list.length)UI.mdErr='Não encontrei atividades nesse arquivo. Confirme que é o .ics exportado do calendário do Moodle.';else toast(r.added+' nova(s) em Novos.')}
+      if(!list.length)UI.mdErr='Não encontrei atividades nesse arquivo. Confirme que é um arquivo .ics válido.';else toast(r.added+' nova(s) em Entrada.')}
     catch(e){UI.mdErr='Não consegui ler o arquivo .ics.'}
     try{inp.value=''}catch(e){}render();
   };

@@ -15,7 +15,7 @@ export function prioSheet(){
   var cands=pl3.length<3?S.tasks.filter(function(t){return !t.done&&t.plan!==k}).sort(cmp).slice(0,6):[];
   var pickHTML=pl3.length<3
     ?'<p class="flabel" style="margin-top:16px">Adicionar para hoje ('+pl3.length+'/3)</p>'+
-      (cands.length?'<ul class="tasks">'+cands.map(function(t){return '<li class="task"><span class="ttext">'+esc(t.text)+(t.kind==='faculdade'?' <span class="tag">Moodle</span>':'')+'</span><button class="ghost" data-act="plan-sh" data-id="'+t.id+'">+ Hoje</button></li>'}).join('')+'</ul>':'<p class="muted small" style="margin-top:6px">Nenhuma tarefa pendente na fila.</p>')+
+      (cands.length?'<ul class="tasks">'+cands.map(function(t){return '<li class="task"><span class="ttext">'+esc(t.text)+(t.kind==='faculdade'?' <span class="tag">Projeto</span>':'')+'</span><button class="ghost" data-act="plan-sh" data-id="'+t.id+'">+ Hoje</button></li>'}).join('')+'</ul>':'<p class="muted small" style="margin-top:6px">Nenhuma tarefa pendente na fila.</p>')+
       '<div class="row" style="margin-top:12px"><button class="btn quiet small" data-act="task-new-today">+ Criar nova tarefa</button></div>'
     :'';
   openSheet('Suas 3 de hoje',

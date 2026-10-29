@@ -44,18 +44,18 @@ export function ignoredHTML(){
   Object.keys(S.moodle.ignored).forEach(function(k){var it=S.moodle.ignored[k].item;if(it&&!seen[it.id]){seen[it.id]=1;list.push(it)}});
   if(!list.length)return '';
   var h='<div class="row"><button class="ghost small" data-act="ib-ign-toggle">'+(UI.showIgn?'Esconder ignoradas':'Ver ignoradas ('+list.length+')')+'</button></div>';
-  if(UI.showIgn)h+=list.map(function(it){return '<div class="icard"><b>'+esc(it.title)+'</b><p class="muted small" style="margin-top:2px">'+(it.subject?esc(it.subject)+', ':'')+(it.due?'Entrega: '+fmtShort(it.due):'Sem prazo')+'</p><div class="row" style="margin-top:12px"><button class="btn quiet small" data-act="ib-restore" data-id="'+esc(it.id)+'">Restaurar em Novos</button></div></div>'}).join('');
+  if(UI.showIgn)h+=list.map(function(it){return '<div class="icard"><b>'+esc(it.title)+'</b><p class="muted small" style="margin-top:2px">'+(it.subject?esc(it.subject)+', ':'')+(it.due?'Entrega: '+fmtShort(it.due):'Sem prazo')+'</p><div class="row" style="margin-top:12px"><button class="btn quiet small" data-act="ib-restore" data-id="'+esc(it.id)+'">Restaurar em Entrada</button></div></div>'}).join('');
   return h;
 }
 export function renderTarefas(){
   var k=today(),kind=UI.tkKind,sub=kind==='pessoal'?UI.tkP:UI.tkF,body='';
-  var s1=seg('tk-kind',kind,[['pessoal','Pessoais'],['faculdade','Faculdade']]);
-  var s2=(kind==='pessoal'?seg('tk-sub',sub,[['pend','Pendentes'],['done','Concluídas']]):seg('tk-sub',sub,[['new','Novos'+(S.inbox.length?' ('+S.inbox.length+')':'')],['pend','Pendentes'],['done','Concluídas']])).replace('class="seg"','class="seg" style="margin-top:10px"');
+  var s1=seg('tk-kind',kind,[['pessoal','Pessoais'],['faculdade','Projetos']]);
+  var s2=(kind==='pessoal'?seg('tk-sub',sub,[['pend','Pendentes'],['done','Concluídas']]):seg('tk-sub',sub,[['new','Entrada'+(S.inbox.length?' ('+S.inbox.length+')':'')],['pend','Pendentes'],['done','Concluídas']])).replace('class="seg"','class="seg" style="margin-top:10px"');
   if(sub==='new'){
-    body=moodlePanelHTML()+(S.inbox.length?S.inbox.slice().sort(inboxSort).map(inboxCard).join(''):'<p class="lead" style="margin-top:18px">Nenhuma atividade nova. Importe do Moodle para ver o que chegou; nada vira tarefa sem a sua confirmação.</p>')+ignoredHTML();
+    body=moodlePanelHTML()+(S.inbox.length?S.inbox.slice().sort(inboxSort).map(inboxCard).join(''):'<p class="lead" style="margin-top:18px">Nenhuma atividade na Entrada. Importe da Agenda ou envie arquivos para ver o que chegou; nada vira tarefa sem a sua confirmação.</p>')+ignoredHTML();
   }else if(sub==='pend'){
     var l=pendingList(kind,k);
-    body='<div class="row"><button class="btn small" data-act="task-new">'+(kind==='faculdade'?'Nova tarefa da faculdade':'Nova tarefa')+'</button></div>'+(l||'<p class="lead" style="margin-top:22px">'+(kind==='pessoal'?'Nenhuma tarefa aberta. Anote o que está na sua cabeça, assim ela para de ocupar espaço lá.':'Nenhuma tarefa da faculdade pendente. Confirme atividades em Novos ou crie uma aqui.')+'</p>');
+    body='<div class="row"><button class="btn small" data-act="task-new">Nova tarefa</button></div>'+(l||'<p class="lead" style="margin-top:22px">'+(kind==='pessoal'?'Nenhuma tarefa aberta. Anote o que está na sua cabeça, assim ela para de ocupar espaço lá.':'Nenhuma tarefa pendente neste projeto. Confirme atividades em Entrada ou crie uma aqui.')+'</p>');
   }else{
     body=doneList(kind,k)||'<p class="lead" style="margin-top:22px">Nenhuma tarefa concluída ainda.</p>';
   }
@@ -157,10 +157,10 @@ export function taskSheet(id,presetToday,kind){
   var t=id?findTask(id):null,tk=t?t.kind:(kind||UI.tkKind||'pessoal');
   setSH({kind:'task',id:id||'',prio:t?t.prio:2,tk:tk});
   var plan=t?(t.plan===today()):!!presetToday;
-  openSheet(t?'Editar tarefa':(tk==='faculdade'?'Nova tarefa da faculdade':'Nova tarefa'),
-    formFields({text:t?t.text:'',subject:t?t.subject:'',showSubject:tk==='faculdade',due:t?t.due:'',est:t?t.est:0,note:t?t.note:'',showCat:true,cat:t?t.cat:''})+
+  openSheet(t?'Editar tarefa':'Nova tarefa',
+    formFields({text:t?t.text:'',due:t?t.due:'',est:t?t.est:0,note:t?t.note:'',showCat:true,cat:t?t.cat:''})+
     '<label class="check-row"><input type="checkbox" id="fToday"'+(plan?' checked':'')+'> Fazer hoje (conta nas suas 3)</label>'+
-    (t&&t.url?'<p class="small" style="margin-top:12px"><a href="'+esc(t.url)+'" target="_blank" rel="noopener" style="color:var(--sea)">Abrir atividade no Moodle</a></p>':'')+
+    (t&&t.url?'<p class="small" style="margin-top:12px"><a href="'+esc(t.url)+'" target="_blank" rel="noopener" style="color:var(--sea)">Abrir link de origem</a></p>':'')+
     '<div class="stack"><button class="btn block" data-act="task-save">Salvar</button>'+
     (t?'<button class="btn quiet block" data-act="task-focus" data-id="'+t.id+'">Focar nisso agora</button><button class="btn quiet block danger" data-act="task-del" data-id="'+t.id+'">Excluir</button>':'')+
     '<button class="btn quiet block" data-act="sheet-close">Cancelar</button></div>');
@@ -170,8 +170,8 @@ export function inboxSheet(id){
   var it=S.inbox.find(function(x){return x.id===id});if(!it)return;
   setSH({kind:'inbox',id:id,prio:it.prio||2});
   openSheet('Editar atividade',
-    formFields({text:it.title,subject:it.subject,showSubject:true,due:it.due,est:it.est,note:it.note,showCat:false})+
-    (it.url?'<p class="small" style="margin-top:12px"><a href="'+esc(it.url)+'" target="_blank" rel="noopener" style="color:var(--sea)">Abrir atividade no Moodle</a></p>':'')+
-    '<div class="stack"><button class="btn block" data-act="ib-save-confirm">Salvar e confirmar</button><button class="btn quiet block" data-act="ib-save">Salvar e manter em Novos</button><button class="btn quiet block danger" data-act="ib-ignore" data-id="'+id+'">Ignorar</button><button class="btn quiet block" data-act="sheet-close">Cancelar</button></div>');
+    formFields({text:it.title,due:it.due,est:it.est,note:it.note,showCat:false})+
+    (it.url?'<p class="small" style="margin-top:12px"><a href="'+esc(it.url)+'" target="_blank" rel="noopener" style="color:var(--sea)">Abrir link de origem</a></p>':'')+
+    '<div class="stack"><button class="btn block" data-act="ib-save-confirm">Salvar e confirmar</button><button class="btn quiet block" data-act="ib-save">Salvar e manter em Entrada</button><button class="btn quiet block danger" data-act="ib-ignore" data-id="'+id+'">Ignorar</button><button class="btn quiet block" data-act="sheet-close">Cancelar</button></div>');
   try{document.activeElement.blur()}catch(e){}
 }

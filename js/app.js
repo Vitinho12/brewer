@@ -238,7 +238,7 @@ document.addEventListener('click',function(e){
     case 'tk-sub':if(UI.tkKind==='pessoal')UI.tkP=el.dataset.v;else UI.tkF=el.dataset.v;render();break;
     case 'voice':startVoice();break;
     case 'phrase-fill':var ph=$('#fPhrase');applyPhrase(ph?ph.value:'');break;
-    case 'ib-confirm':var ic=S.inbox.find(function(x){return x.id===id});if(ic){confirmInbox(ic);save();render();toast('Confirmada. Ela está em Faculdade, Pendentes.')}break;
+    case 'ib-confirm':var ic=S.inbox.find(function(x){return x.id===id});if(ic){confirmInbox(ic);save();render();toast('Confirmada. Ela está em Projetos, Pendentes.')}break;
     case 'ib-edit':inboxSheet(id);break;
     case 'ib-ignore':var ii=S.inbox.find(function(x){return x.id===id});if(ii){ignoreInbox(ii);save();closeSheet();render();toast('Ignorada. Dá para restaurar em "Ver ignoradas".')}break;
     case 'ib-ign-toggle':UI.showIgn=!UI.showIgn;render();break;
@@ -249,7 +249,7 @@ document.addEventListener('click',function(e){
       if(!it2){closeSheet();break}
       if(!f2.text){toast('Escreva o título da atividade.');break}
       it2.title=f2.text;it2.subject=f2.subject;it2.due=f2.due;it2.est=f2.est;it2.prio=SH.prio;it2.note=f2.note;it2.edited=true;
-      if(a==='ib-save-confirm'){confirmInbox(it2);toast('Confirmada. Ela está em Faculdade, Pendentes.')}
+      if(a==='ib-save-confirm'){confirmInbox(it2);toast('Confirmada. Ela está em Projetos, Pendentes.')}
       save();closeSheet();render();break;
     case 'md-ics':var fi=$('#mdIcs');if(fi)fi.click();break;
     case 'md-cfg':UI.mdCfg=!UI.mdCfg;render();break;
@@ -414,7 +414,7 @@ document.addEventListener('change',function(e){
   if(t.id==='kindSel'){S.draft.kind=t.value==='parcial'?'parcial':'total';save();return}
   if(t.id==='fAwake'){S.keepAwake=t.checked;save();return}
   if(t.id==='durRange'){save();return}
-  if(t.id==='gcMoodle'){gcCfg().moodleCals=t.value.split(',').map(function(x){return x.trim()}).filter(Boolean);save();toast('Calendários do Moodle salvos. Toque em Sincronizar.');return}
+  if(t.id==='gcMoodle'){gcCfg().moodleCals=t.value.split(',').map(function(x){return x.trim()}).filter(Boolean);save();toast('Calendários para gerar tarefas salvos. Toque em Sincronizar.');return}
   if(t.id==='mdIcs'){mdFile(t);return}
   if(t.id==='gcPush'){gcCfg().push=t.checked;save();return}
   if(t.id==='gcExtra'){gcCfg().extraCals=t.value.split(',').map(function(x){return x.trim()}).filter(Boolean);save();toast('Calendários extras salvos. Toque em Sincronizar.');return}

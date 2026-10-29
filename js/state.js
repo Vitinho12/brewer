@@ -1,5 +1,6 @@
 import { $, esc, pl, uid, today, parseKey, addDays, toMin, fromMin, fmtHM, mondayOf, CHECK } from './utils.js';
-import { setAmbienceMedia, stopAmbienceMedia } from './media.js';
+import { setAmbienceMedia, stopAmbienceMedia, haptic, playZenBell } from './media.js';
+export { haptic, playZenBell };
 
 export var KEY='brewer.v1';
 
@@ -20,7 +21,14 @@ export function normTask(t){
   if(t.doneTs==null)t.doneTs=(t.done&&t.doneAt)?parseKey(t.doneAt).getTime()+43200000:0;
   return t;
 }
-export function setDone(t,on){t.done=!!on;t.status=on?'done':'pending';t.doneAt=on?today():'';t.doneTs=on?Date.now():0;estRecord(t,on)}
+export function setDone(t,on){
+  t.done=!!on;
+  t.status=on?'done':'pending';
+  t.doneAt=on?today():'';
+  t.doneTs=on?Date.now():0;
+  estRecord(t,on);
+  try{if(on)haptic('success');else haptic('tap')}catch(e){}
+}
 /* aprende com o próprio usuário: guarda estimado x realizado (sem IA; só ajusta a nota quando há amostras suficientes) */
 export function estRecord(t,on){
   S.estLog=(S.estLog||[]).filter(function(r){return r.taskId!==t.id});
@@ -79,13 +87,8 @@ export function setAmbience(mode){
   setAmbienceMedia(mode);
 }
 export function alertUser(){
-  try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
-  try{
-    var A=window.AudioContext||window.webkitAudioContext;var c=new A();
-    var o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=660;
-    g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.2,c.currentTime+.05);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.9);
-    o.start();o.stop(c.currentTime+1);
-  }catch(e){}
+  try{haptic('success')}catch(e){}
+  try{playZenBell()}catch(e){}
 }
 var toastT;
 export function toast(m){var t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toastT);toastT=setTimeout(function(){t.hidden=true},2800)}

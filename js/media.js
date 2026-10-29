@@ -364,3 +364,65 @@ export function updateMediaSession(f, force) {
     } catch (e) {}
   }
 }
+
+/* ---------- Haptics & Som Zen de Conclusão ---------- */
+
+/**
+ * Vibração tátil sutil para ações do usuário
+ * @param {'tick'|'tap'|'start'|'success'} type
+ */
+export function haptic(type) {
+  try {
+    if (!('vibrate' in navigator)) return;
+    if (type === 'tick') {
+      navigator.vibrate(10);
+    } else if (type === 'tap') {
+      navigator.vibrate(18);
+    } else if (type === 'start') {
+      navigator.vibrate([22, 40, 25]);
+    } else if (type === 'success') {
+      navigator.vibrate([35, 50, 40, 50, 80]);
+    }
+  } catch (e) {}
+}
+
+/**
+ * Toca um som harmônico e relaxante de sino tibetano / taça de meditação zen
+ * Sintetizado via Web Audio API (sem arquivos externos pesados, latência zero)
+ */
+export function playZenBell() {
+  try {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    var ctx = new AudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+
+    var now = ctx.currentTime;
+    // Frequências da série harmônica de tigela tibetana de bronze (528 Hz - nota de cura/foco)
+    var partials = [
+      { freq: 528, gain: 0.32, decay: 3.6 },
+      { freq: 1056, gain: 0.16, decay: 2.6 },
+      { freq: 1584, gain: 0.07, decay: 1.8 },
+      { freq: 2112, gain: 0.03, decay: 1.2 }
+    ];
+
+    partials.forEach(function(p) {
+      var osc = ctx.createOscillator();
+      var g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(p.freq, now);
+
+      // Ataque suave de baqueta (mallet macio)
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.exponentialRampToValueAtTime(p.gain, now + 0.015);
+      // Ressonância acústica longa e relaxante
+      g.gain.exponentialRampToValueAtTime(0.0001, now + p.decay);
+
+      osc.connect(g);
+      g.connect(ctx.destination);
+
+      osc.start(now);
+      osc.stop(now + p.decay + 0.1);
+    });
+  } catch (e) {}
+}

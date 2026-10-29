@@ -241,6 +241,8 @@ body[data-theme="9"]{--bg:#181210;--surface:#251D19;--ink:#F4EADD;--muted:#BBA89
 .phase-badge.sm{padding:5px 11px;font-size:12px;min-height:34px}
 .nudge-bar{margin-top:8px;padding:8px 12px;border-radius:14px;background:var(--sea-soft);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px}
 .smart-card{margin-top:10px;padding:11px 14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.smart-card.smart-review{border-color:rgba(221,161,94,0.4);background:linear-gradient(135deg,var(--surface) 0%,rgba(221,161,94,0.08) 100%);box-shadow:0 4px 16px rgba(221,161,94,0.06)}
+.smart-card.smart-review .smart-eyebrow{color:var(--amber,#DDA15E)}
 .smart-info{min-width:160px;flex:1}
 .smart-eyebrow{display:block;font-size:11px;font-weight:700;color:var(--sea);text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px}
 .smart-info b{font-size:14px;line-height:1.25;display:block}

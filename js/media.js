@@ -368,20 +368,65 @@ export function updateMediaSession(f, force) {
 /* ---------- Haptics & Som Zen de Conclusão ---------- */
 
 /**
- * Vibração tátil sutil para ações do usuário
+ * Vibração tátil sutil para ações do usuário (com fallback de áudio mecânico para iOS Safari)
  * @param {'tick'|'tap'|'start'|'success'} type
  */
 export function haptic(type) {
+  // Se o navegador suportar navigator.vibrate (Android / Chrome / etc.)
   try {
-    if (!('vibrate' in navigator)) return;
+    if ('vibrate' in navigator && typeof navigator.vibrate === 'function') {
+      if (type === 'tick') { navigator.vibrate(12); return; }
+      if (type === 'tap') { navigator.vibrate(20); return; }
+      if (type === 'start') { navigator.vibrate([22, 40, 25]); return; }
+      if (type === 'success') { navigator.vibrate([40, 50, 40, 50, 80]); return; }
+    }
+  } catch (e) {}
+
+  // Fallback para iOS Safari (Apple não implementa navigator.vibrate no WebKit):
+  // Gera um micro-clique mecânico via Web Audio (imitando o tique tátil da coroa do Apple Watch)
+  try {
+    var AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    var ctx = new AudioCtx();
+    if (ctx.state === 'suspended') ctx.resume();
+
+    var now = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+
     if (type === 'tick') {
-      navigator.vibrate(10);
-    } else if (type === 'tap') {
-      navigator.vibrate(18);
-    } else if (type === 'start') {
-      navigator.vibrate([22, 40, 25]);
+      // Clique seco do slider
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(160, now);
+      osc.frequency.exponentialRampToValueAtTime(30, now + 0.015);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.02);
+    } else if (type === 'tap' || type === 'start') {
+      // Toque de confirmação
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(240, now);
+      osc.frequency.exponentialRampToValueAtTime(50, now + 0.025);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.03);
     } else if (type === 'success') {
-      navigator.vibrate([35, 50, 40, 50, 80]);
+      // Pulso duplo suave
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.1);
     }
   } catch (e) {}
 }

@@ -75,16 +75,29 @@ export function smartBannerHTML(k,cur,nxt,pl3,hr,reviewDone){
       '<div class="smart-acts"><button class="btn small" data-act="sg-focus" data-id="'+s0.task.id+'" data-dur="'+s0.dur+'">Focar ('+s0.dur+'m)</button><button class="btn quiet small" data-act="auto-plan">Agenda</button>'+pBtn+'</div>'+
     '</div>';
   }
+  /* 4. Prioridade do dia (Suas 3 de hoje) pendente */
   var nextPrio=pl3.find(function(t){return !t.done});
   if(nextPrio){
     return '<div class="smart-card">'+
       '<div class="smart-info"><span class="smart-eyebrow">🎯 Prioridade de hoje</span><b>'+esc(nextPrio.text)+'</b></div>'+
-      '<div class="smart-acts"><button class="btn small" data-act="focus-task" data-id="'+nextPrio.id+'">Selecionar</button>'+pBtn+'</div>'+
+      '<div class="smart-acts"><button class="btn small" data-act="sg-focus" data-id="'+nextPrio.id+'" data-dur="25">Focar agora</button>'+pBtn+'</div>'+
     '</div>';
   }
+
+  /* 5. Se ainda não escolheu as 3 de hoje: sugere a tarefa mais prioritária da lista geral */
+  var anyPending = S.tasks.filter(function(t){ return !t.done }).sort(cmp)[0];
+  if(anyPending){
+    var tag = (anyPending.kind === 'faculdade' || anyPending.kind === 'projeto') ? 'Projeto' : (anyPending.cat || 'Tarefa');
+    return '<div class="smart-card">'+
+      '<div class="smart-info"><span class="smart-eyebrow">🎯 Próximo Foco · '+esc(tag)+'</span><b>'+esc(anyPending.text)+'</b></div>'+
+      '<div class="smart-acts"><button class="btn small" data-act="sg-focus" data-id="'+anyPending.id+'" data-dur="25">Focar agora</button>'+pBtn+'</div>'+
+    '</div>';
+  }
+
+  /* 6. Fallback final quando não há nenhuma tarefa pendente no app */
   return '<div class="smart-card">'+
-    '<div class="smart-info"><span class="smart-eyebrow">📅 Agenda livre</span><b>Quer sugestões para os horários livres?</b></div>'+
-    '<div class="smart-acts"><button class="btn small" data-act="auto-plan">Montar dia</button>'+pBtn+'</div>'+
+    '<div class="smart-info"><span class="smart-eyebrow">☕ Hora do Café</span><b>Pronto para um bloco de foco livre de 25m?</b></div>'+
+    '<div class="smart-acts"><button class="btn small" data-act="start-focus">Preparar café</button>'+pBtn+'</div>'+
   '</div>';
 }
 
